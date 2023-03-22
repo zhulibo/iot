@@ -1,0 +1,31 @@
+@define-mixin clearfix {
+  &::after{
+    content: "\200B";
+    display: block;
+    height: 0;
+    clear: both;
+  }
+}
+
+@define-mixin scrollBar $width: 8px, $color: rgba(0, 0, 0, .2) {
+  /* chrome */
+  &::-webkit-scrollbar{
+    width: $width;
+  }
+  &::-webkit-scrollbar-thumb{
+    background-color: $color;
+  }
+  &::-webkit-scrollbar-track{
+    background-color: transparent;
+  }
+  /* 火狐 */
+  scrollbar-color: $color transparent;
+  scrollbar-width: thin;
+}
+
+@define-mixin line $line: 1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $line;
+}
