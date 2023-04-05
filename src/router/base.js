@@ -18,6 +18,15 @@ export const baseRoutes = [
     component: () => import('@/views/login/login.vue'),
   },
   {
+    name: 'resetPassword',
+    path: '/resetPassword',
+    meta: {
+      title: '重设密码',
+      hidden: true,
+    },
+    component: () => import('@/views/login/resetPassword.vue'),
+  },
+  {
     name: 'register',
     path: '/register',
     meta: {
@@ -27,21 +36,32 @@ export const baseRoutes = [
     component: () => import('@/views/login/register.vue'),
   },
   {
-    name: 'home',
-    path: '/home',
+    name: 'playground',
+    path: '/playground',
     meta: {
-      title: 'home'
+      title: 'playground',
+      icon: 'baicai',
     },
     component: layout,
     children: [
       {
-        name: 'dashboard',
-        path: 'dashboard',
+        name: 'test',
+        path: 'test',
         meta: {
-          title: 'dashboard'
+          title: 'test',
+          icon: 'baicai',
         },
-        component: () => import('@/views/dashboard/dashboard.vue'),
+        component: () => import('@/views/playground/test.vue'),
+      },
+      {
+        name: 'test2',
+        path: 'test2',
+        meta: {
+          title: 'test2',
+          icon: 'baicai',
+        },
+        component: () => import('@/views/playground/test2.vue'),
       }
     ]
-  },
+  }
 ]

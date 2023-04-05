@@ -30,14 +30,15 @@ function decrypt_str(key, iv, str){
   });
   return decrypted.toString(CryptoJS.enc.Utf8);
 };
-function setDataAes(key, text){
+function setDataAes(text, key){
+  key = '2589633659865985'
   var key1 = getSha256(key).substr(10, 16)
   var iv1 = getSha256(key1)
   var ret1 = encrypt_str(key1, iv1, text)
   return ret1
 };
-function getDataAes(key, text){
-  var key = getSha256(key).substr(10, 16)
+function getDataAes(text, key){
+  key = getSha256(key).substr(10, 16)
   var iv = getSha256(key)
   var ret = decrypt_str(key, iv, text)
   var ret_s = ret.replace(/^\s*|\s*$/g, '')

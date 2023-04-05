@@ -1,5 +1,4 @@
 import axios from '@/axios'
-
 // 获取菜单列表
 export function getMenuList() {
   return new Promise(resolve => {

@@ -2,8 +2,9 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '@/api/user/user'
-import {encrypt} from "@/utils/aes";
 import {validPhone, validPwd, validUserName} from "@/utils/validate";
+import {setDataAes} from "@/utils/aes2";
+import {ElMessage} from "element-plus";
 
 const router = useRouter()
 
@@ -11,6 +12,7 @@ const registerForm = reactive({
   userName: '',
   phone: '',
   password: '',
+  isCompany: false,
 })
 const registerRule = reactive({
   userName: [
@@ -25,6 +27,9 @@ const registerRule = reactive({
     { required: true, message: '请输入', trigger: 'blur' },
     { validator: validPwd, trigger: 'blur' }
   ],
+  isCompany: [
+    { required: true, message: '请选择', trigger: 'blur' }
+  ],
 })
 const registerFormRef = ref()
 
@@ -33,11 +38,13 @@ const submitLoginForm = () => {
   registerFormRef.value?.validate(valid => {
     if(valid) {
       register({
-        username: registerForm.userName,
+        userName: registerForm.userName,
         phone: registerForm.phone,
-        password: encrypt(registerForm.password)
+        passWord: setDataAes(registerForm.password),
+        isCompany: registerForm.isCompany
       })
         .then(res => {
+          ElMessage.success('注册成功')
           router.push({ path: '/login' })
         })
     }
@@ -65,6 +72,12 @@ const goToLogin = () => {
         </el-form-item>
         <el-form-item prop="password">
           <el-input type="password" placeholder="密码" v-model="registerForm.password" @keyup.enter="submitLoginForm"></el-input>
+        </el-form-item>
+        <el-form-item prop="isCompany">
+          <el-radio-group v-model="registerForm.isCompany">
+            <el-radio :label="true">公司</el-radio>
+            <el-radio :label="false">个人</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-button type="primary" @click="submitLoginForm" style="width: 100%;">注册</el-button>
       </el-form>

@@ -49,7 +49,7 @@ function filterAsyncRouter(asyncRouterMap) {
         route.component = loadComponent(route.component)
       }
     }
-    if (route.children?.length) {
+    if (route.children && route.children.length) {
       route.children = filterAsyncRouter(route.children)
     }
     return true

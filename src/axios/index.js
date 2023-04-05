@@ -38,13 +38,19 @@ axios.interceptors.response.use(
   err => {
     if (err && err.response) {
       switch (err.response.status) {
-        case 500:
-          err.message = '服务器错误(500)'
-          break
+        case 401:
+          userStore.resetUserInfo()
+          router.push({path: '/login'})
+          err.message = '请重新登录(401)'
+          break;
         case 403:
+          userStore.resetUserInfo()
           router.push({path: '/login'})
           err.message = '请重新登录(403)'
-          break
+          break;
+        case 500:
+          err.message = '服务器错误(500)'
+          break;
         default:
           err.message = `连接出错(${err.response.status})！`
       }

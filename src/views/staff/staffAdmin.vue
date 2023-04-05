@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {nextTick, reactive, ref} from "vue";
-import {getUserList, addUser, editUser, delUser} from "@/api/user/user";
+import {getStaffList, addStaff, editStaff, delStaff} from "@/api/user/staffAdmin";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 
 const schForm = reactive({
   userName: '',
+  fullName: '',
   startTime: '',
   endTime: '',
   status: undefined,
@@ -13,24 +14,24 @@ const schForm = reactive({
 })
 
 const loading = ref(true)
-const userList = ref([])
+const staffList = ref([])
 const total = ref(0)
 const tableRef = ref()
 
-// 获取示例列表
-const getUserListHandle = () => {
+// 获取公司管理员列表
+const getStaffListHandle = () => {
   loading.value = true
-  getUserList(schForm)
+  getStaffList(schForm)
     .then(res => {
       total.value = res.total
-      userList.value = res.data
+      staffList.value = res.data
       loading.value = false
     })
     .catch(() => {
       loading.value = false
     })
 }
-getUserListHandle()
+getStaffListHandle()
 
 const schFormRef = ref()
 
@@ -40,40 +41,73 @@ const resetForm = () => {
   getListHandle()
 }
 
-// 刷新示例
+// 刷新公司管理员
 const getListHandle = () => {
   tableRef.value.clearSort() // 重置排序
   schForm.page = 1
-  getUserListHandle()
+  getStaffListHandle()
 }
 
-// 切换示例状态
+// 切换公司管理员状态
 const switchStatus = (row) => {
   loading.value = true
   const data = {
     userId: row.userId,
     status: row.status,
   }
-  editUser(data).then(res => {
+  editStaff(data).then(res => {
     ElMessage.success(res.msg)
-    getUserListHandle()
+    getStaffListHandle()
   }).catch(() => {
-    getUserListHandle()
+    getStaffListHandle()
   })
 }
 
-// 删除示例
-const delUserHandle = (row) => {
+let multipleSelection = ref([])
+// 多选
+const handleSelectionChange = (val) => {
+  console.log(val)
+  multipleSelection.value = val
+}
+// 多选删除
+const multiDel = () => {
+  let data = multipleSelection.value.map(item => {
+    return item.userId
+  })
+  data = data.join()
+  ElMessageBox.confirm('确定删除', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
+    .then(() => {
+      delStaff({
+        userId: data
+      })
+        .then(res => {
+          ElMessage.success(res.msg)
+          getStaffListHandle()
+        })
+    })
+    .catch(e => {
+      console.log(e)
+    })
+}
+
+// 删除公司管理员
+const delStaffHandle = (row) => {
   ElMessageBox.confirm('确定删除 ' + row.userName, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   })
     .then(() => {
-      delUser(row.userId)
+      delStaff({
+        userId: row.userId
+      })
         .then(res => {
           ElMessage.success(res.msg)
-          getUserListHandle()
+          getStaffListHandle()
         })
     })
     .catch(e => {
@@ -82,65 +116,65 @@ const delUserHandle = (row) => {
 }
 
 const dialogEditVisible = ref(false)
-const userFormRef = ref()
+const staffFormRef = ref()
 
-// 新增示例
-const addUserHandle = async() => {
+// 新增公司管理员
+const addStaffHandle = async() => {
   dialogEditVisible.value = true
   await nextTick()
-  resetUserForm()
+  resetStaffForm()
 }
 
-// 编辑示例
-const editUserHandle = async(row) => {
+// 编辑公司管理员
+const editStaffHandle = async(row) => {
   dialogEditVisible.value = true
   await nextTick()
-  resetUserForm()
-  for (const key in userForm) {
-    userForm[key] = row[key]
+  resetStaffForm()
+  for (const key in staffForm) {
+    staffForm[key] = row[key]
   }
-  userForm.userId = row.userId
+  staffForm.userId = row.userId
 }
 
-// 重置示例表单
-const resetUserForm = () => {
-  userFormRef.value.resetFields()
-  delete userForm.userId
+// 重置公司管理员表单
+const resetStaffForm = () => {
+  staffFormRef.value.resetFields()
+  delete staffForm.userId
 }
 
-const userForm = reactive({
+const staffForm = reactive({
   userName: '',
+  fullName: '',
   phone: '',
   email: '',
-  userDeviceLoginid: '',
   status: 1
 })
 
-const userRules = reactive({
+const staffRules = reactive({
   userName: [{ required: true, message: '请输入', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入', trigger: 'blur' }],
-  email: [{ required: true, message: '请输入', trigger: 'blur' }],
-  userDeviceLoginid: [{ required: true, message: '请输入', trigger: 'blur' }],
   status: [{ required: true, message: '请输入', trigger: 'blur' }],
 })
 
-// 提交示例表单
-const submitUserForm = () => {
-  userFormRef.value.validate(valid => {
+// 提交公司管理员表单
+const submitStaffForm = () => {
+  staffFormRef.value.validate(valid => {
     if(valid) {
-      if(userForm.userId) {
-        editUser(userForm)
+      staffForm.isCompany = false
+      staffForm.isStaff = true
+      if(staffForm.userId) {
+        editStaff(staffForm)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
-            getUserListHandle()
+            getStaffListHandle()
           })
       }else{
-        addUser(userForm)
+        addStaff(staffForm)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
-            getUserListHandle()
+            getStaffListHandle()
           })
       }
     }
@@ -156,8 +190,8 @@ const submitUserForm = () => {
           <el-form-item label="用户名" prop="userName">
             <el-input v-model="schForm.userName" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
-          <el-form-item label="姓名" prop="name">
-            <el-input v-model="schForm.name" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
+          <el-form-item label="姓名" prop="fullName">
+            <el-input v-model="schForm.fullName" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
           <el-form-item label="创建时间" prop="startTime">
             <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起" style="width: 200px;" @change="getListHandle"></el-date-picker>
@@ -179,17 +213,17 @@ const submitUserForm = () => {
         </el-form>
       </div>
       <div class="new-item">
-        <el-button type="primary" @click="addUserHandle"><icon name="add" />新增</el-button>
+        <el-button type="primary" @click="addStaffHandle"><icon name="add" />新增</el-button>
       </div>
     </div>
-    <el-table ref="tableRef" :data="userList" v-loading="loading">
-      <el-table-column type="index" width="50"></el-table-column>
+    <el-table ref="tableRef" :data="staffList" v-loading="loading" @selection-change="handleSelectionChange">
+<!--      <el-table-column type="index" width="50"></el-table-column>-->
+      <el-table-column type="selection" width="40" />
       <el-table-column prop="createTime" label="创建时间" align="center" width="200" sortable></el-table-column>
       <el-table-column prop="userName" label="用户名" min-width="140" sortable></el-table-column>
-      <el-table-column prop="name" label="姓名" min-width="140" sortable></el-table-column>
+      <el-table-column prop="fullName" label="姓名" min-width="100" sortable></el-table-column>
       <el-table-column prop="phone" label="手机号" align="center" min-width="140" sortable></el-table-column>
-      <el-table-column prop="email" label="邮箱" min-width="220" sortable></el-table-column>
-      <el-table-column prop="userDeviceLoginid" label="设备id" min-width="140" sortable></el-table-column>
+      <el-table-column prop="email" label="邮箱" min-width="260" sortable></el-table-column>
       <el-table-column prop="status" label="状态" align="center" min-width="120" sortable>
         <template #default="scope">
           <el-switch
@@ -203,43 +237,41 @@ const submitUserForm = () => {
       </el-table-column>
       <el-table-column label="操作" align="center" width="200" fixed="right" class-name="manage-td">
         <template #default="scope">
-          <el-button type="primary" link @click="editUserHandle(scope.row)"><icon name="edit" />修改</el-button>
-          <el-button type="warning" link @click="delUserHandle(scope.row)"><icon name="del" />删除</el-button>
+          <el-button type="primary" link @click="editStaffHandle(scope.row)"><icon name="edit" />修改</el-button>
+          <el-button type="warning" link @click="delStaffHandle(scope.row)"><icon name="del" />删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <Page v-model:currentPage="schForm.page" :total="total" @getList="getUserListHandle"></Page>
-    <el-dialog v-model="dialogEditVisible" title="编辑示例" width="800px">
-      <el-form ref="userFormRef" :model="userForm" :rules="userRules" label-width="auto">
+    <div style="margin-top: 10px">
+      <el-button type="danger" plain style="margin-left: 10px;" @click="multiDel" :disabled="multipleSelection.length === 0"><icon name="del" />删除</el-button>
+    </div>
+    <Page v-model:currentPage="schForm.page" :total="total" @getList="getStaffListHandle"></Page>
+    <el-dialog v-model="dialogEditVisible" title="编辑公司管理员" width="800px">
+      <el-form ref="staffFormRef" :model="staffForm" :rules="staffRules" label-width="auto">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="名称" prop="userName">
-              <el-input v-model="userForm.userName" placeholder="请输入"></el-input>
+              <el-input v-model="staffForm.userName" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="姓名" prop="fullName">
+              <el-input v-model="staffForm.fullName" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="手机号" prop="phone">
-              <el-input v-model="userForm.phone" placeholder="请输入"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="name">
-              <el-input v-model="userForm.name" placeholder="请输入"></el-input>
+              <el-input v-model="staffForm.phone" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="userForm.phone" placeholder="请输入"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="设备id" prop="userDeviceLoginid">
-              <el-input v-model="userForm.phone" placeholder="请输入"></el-input>
+              <el-input v-model="staffForm.phone" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
-              <el-switch v-model="userForm.status" :active-value="1" :inactive-value="0"></el-switch>
+              <el-switch v-model="staffForm.status" :active-value="1" :inactive-value="0"></el-switch>
             </el-form-item>
           </el-col>
         </el-row>
@@ -247,7 +279,7 @@ const submitUserForm = () => {
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogEditVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitUserForm">确定</el-button>
+          <el-button type="primary" @click="submitStaffForm">确定</el-button>
         </span>
       </template>
     </el-dialog>

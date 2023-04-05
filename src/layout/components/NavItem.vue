@@ -27,19 +27,21 @@ const resolvePath = (routePath) => {
 <template>
   <el-sub-menu v-if="hasSubmenu" :index="item.path">
     <template #title>
-      <icon name="baicai" />
+      <icon :name="item.meta.icon" />
       <span>{{ item.meta.title }}</span>
     </template>
     <navItem v-for="child in item.children" :key="child.path" :item="child" :basePath="resolvePath(child.path)"></navItem>
   </el-sub-menu>
   <el-menu-item v-else-if="!item.meta.hidden" :index="basePath">
+    <icon :name="item.meta.icon" />
     <span>{{ item.meta.title }}</span>
   </el-menu-item>
 </template>
 
 
 <style lang="pcss" scoped>
-.icon-nav{
-  margin-right: 2px;
+.icon{
+  margin-right: 3px;
+  font-size: 16px;
 }
 </style>

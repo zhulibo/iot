@@ -3,9 +3,8 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { login } from '@/api/user/user'
-import {encrypt} from "@/utils/aes";
+import {setDataAes} from "@/utils/aes2";
 import {validUserName} from "@/utils/validate";
-import {setDataAes} from "@/utils/ase";
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -28,14 +27,13 @@ const submitLoginForm = () => {
   loginFormRef.value?.validate(valid => {
     if(valid) {
       login({
-        username: loginForm.userName,
-        // password: encrypt(loginForm.password)
-        password: setDataAes('2589633659865985',loginForm.password)
+        userName: loginForm.userName,
+        passWord: setDataAes(loginForm.password)
       })
         .then(res => {
           let userInfo = {
             token: res.data.token,
-            ...res.data.userinfo
+            ...res.data.userInfo
           }
           userStore.updateUserInfo(userInfo)
           localStorage.setItem('userInfo', JSON.stringify(userInfo))
@@ -51,7 +49,8 @@ const goToRegister = () => {
 }
 
 // 忘记密码
-const forgetPassword = () => {
+const resetPassword = () => {
+  router.push({ path: '/resetPassword' })
 }
 
 const inputType = ref('password')
@@ -80,7 +79,7 @@ const changeInputType = () => {
         <el-button type="primary" @click="submitLoginForm" style="width: 100%;">登录</el-button>
       </el-form>
       <div class="bottom">
-        <el-button type="primary" class="l" link size="small" @click="forgetPassword">忘记密码</el-button>
+        <el-button type="primary" class="l" link size="small" @click="resetPassword">忘记密码</el-button>
         <el-button type="primary" class="r" link size="small" @click="goToRegister">新用户注册</el-button>
       </div>
     </div>
