@@ -1,19 +1,23 @@
-<script setup lang="ts">
+<script setup>
 import {nextTick, reactive, ref} from "vue";
 import {getDeviceList, addDevice, editDevice, delDevice} from "@/api/device/device";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useRouter} from "vue-router";
+import {useUserStore} from "@/stores/user";
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const schForm = reactive({
+  token: userStore.getUserInfo.token,
+  userName: userStore.getUserInfo.userName,
   deviceId: '',
   startTime: '',
   endTime: '',
   status: '',
   isSub: '',
   page: 1,
-  rows: 10
+  size: 1,
 })
 
 const loading = ref(true)
@@ -26,8 +30,8 @@ const getDeviceListHandle = () => {
   loading.value = true
   getDeviceList(schForm)
     .then(res => {
-      total.value = res.total
-      deviceList.value = res.data
+      total.value = res.count
+      deviceList.value = res.results
       loading.value = false
     })
     .catch(() => {
@@ -230,8 +234,9 @@ const toLog = (row) => {
     </div>
     <el-table ref="tableRef" :data="deviceList" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="createTime" label="创建时间" align="center" width="200" sortable></el-table-column>
+      <el-table-column prop="created" label="创建时间" align="center" width="200" sortable></el-table-column>
       <el-table-column prop="deviceId" label="设备id" min-width="140" sortable></el-table-column>
+      <el-table-column prop="title" label="title" min-width="140" sortable></el-table-column>
       <el-table-column prop="status" label="设备状态" min-width="140" sortable>
         <template #default="scope">
           <el-button v-if="scope.row.status === '1'" type="info" link>未激活</el-button>
@@ -239,17 +244,17 @@ const toLog = (row) => {
           <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="isSub" label="订阅状态" min-width="140" sortable>
-        <template #default="scope">
-          <el-switch
-            v-model="scope.row.isSub"
-            :active-value="1"
-            :inactive-value="0"
-            @change="switchStatus(scope.row)"
-          >
-          </el-switch>
-        </template>
-      </el-table-column>
+<!--      <el-table-column prop="isSub" label="订阅状态" min-width="140" sortable>-->
+<!--        <template #default="scope">-->
+<!--          <el-switch-->
+<!--            v-model="scope.row.isSub"-->
+<!--            :active-value="1"-->
+<!--            :inactive-value="0"-->
+<!--            @change="switchStatus(scope.row)"-->
+<!--          >-->
+<!--          </el-switch>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
       <el-table-column label="操作" align="right" width="260" fixed="right" class-name="manage-td">
         <template #default="scope">
           <el-button type="primary" link v-if="scope.row.isSub === 1" @click="upgrade(scope.row)"><icon name="edit" />升级</el-button>

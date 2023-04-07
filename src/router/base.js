@@ -35,33 +35,33 @@ export const baseRoutes = [
     },
     component: () => import('@/views/login/register.vue'),
   },
-  {
-    name: 'playground',
-    path: '/playground',
-    meta: {
-      title: 'playground',
-      icon: 'baicai',
-    },
-    component: layout,
-    children: [
-      {
-        name: 'test',
-        path: 'test',
-        meta: {
-          title: 'test',
-          icon: 'baicai',
-        },
-        component: () => import('@/views/playground/test.vue'),
-      },
-      {
-        name: 'test2',
-        path: 'test2',
-        meta: {
-          title: 'test2',
-          icon: 'baicai',
-        },
-        component: () => import('@/views/playground/test2.vue'),
-      }
-    ]
-  }
+  // {
+  //   name: 'playground',
+  //   path: '/playground',
+  //   meta: {
+  //     title: 'playground',
+  //     icon: 'baicai',
+  //   },
+  //   component: layout,
+  //   children: [
+  //     {
+  //       name: 'test',
+  //       path: 'test',
+  //       meta: {
+  //         title: 'test',
+  //         icon: 'baicai',
+  //       },
+  //       component: () => import('@/views/playground/test.vue'),
+  //     },
+  //     {
+  //       name: 'test2',
+  //       path: 'test2',
+  //       meta: {
+  //         title: 'test2',
+  //         icon: 'baicai',
+  //       },
+  //       component: () => import('@/views/playground/test2.vue'),
+  //     }
+  //   ]
+  // }
 ]

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import {nextTick, reactive, ref, watch} from "vue"
 import { getMenuList, addMenu, editMenu, delMenu } from '@/api/menu/menu'
 import {ElMessage, ElMessageBox, ElTable} from 'element-plus'

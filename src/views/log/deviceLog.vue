@@ -14,11 +14,13 @@ let deviceList = ref([])
 const getDeviceListHandle = () => {
   let data = {
     token: userStore.getUserInfo.token,
-    userName: userStore.getUserInfo.userName
+    userName: userStore.getUserInfo.userName,
+    size: 999,
+    page: 1,
   }
   getDeviceList(data)
     .then(res => {
-      deviceList.value = res.data
+      deviceList.value = res.results
     })
 }
 getDeviceListHandle()

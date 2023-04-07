@@ -1,16 +1,20 @@
-<script setup lang="ts">
+<script setup>
 import {nextTick, reactive, ref} from "vue";
 import {getStaffList, addStaff, editStaff, delStaff} from "@/api/user/staffAdmin";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
+import {useUserStore} from "@/stores/user";
+
+const userStore = useUserStore()
 
 const schForm = reactive({
+  token: userStore.getUserInfo.token,
   userName: '',
   fullName: '',
   startTime: '',
   endTime: '',
   status: undefined,
   page: 1,
-  rows: 10
+  size: 2
 })
 
 const loading = ref(true)
@@ -23,8 +27,8 @@ const getStaffListHandle = () => {
   loading.value = true
   getStaffList(schForm)
     .then(res => {
-      total.value = res.total
-      staffList.value = res.data
+      total.value = res.count
+      staffList.value = res.results
       loading.value = false
     })
     .catch(() => {
@@ -170,7 +174,10 @@ const submitStaffForm = () => {
             getStaffListHandle()
           })
       }else{
-        addStaff(staffForm)
+        let data = {
+          token: userStore.getUserInfo.token,
+        }
+        addStaff(staffForm, data)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
@@ -224,17 +231,17 @@ const submitStaffForm = () => {
       <el-table-column prop="fullName" label="姓名" min-width="100" sortable></el-table-column>
       <el-table-column prop="phone" label="手机号" align="center" min-width="140" sortable></el-table-column>
       <el-table-column prop="email" label="邮箱" min-width="260" sortable></el-table-column>
-      <el-table-column prop="status" label="状态" align="center" min-width="120" sortable>
-        <template #default="scope">
-          <el-switch
-            v-model="scope.row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="switchStatus(scope.row)"
-          >
-          </el-switch>
-        </template>
-      </el-table-column>
+<!--      <el-table-column prop="status" label="状态" align="center" min-width="120" sortable>-->
+<!--        <template #default="scope">-->
+<!--          <el-switch-->
+<!--            v-model="scope.row.status"-->
+<!--            :active-value="1"-->
+<!--            :inactive-value="0"-->
+<!--            @change="switchStatus(scope.row)"-->
+<!--          >-->
+<!--          </el-switch>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
       <el-table-column label="操作" align="center" width="200" fixed="right" class-name="manage-td">
         <template #default="scope">
           <el-button type="primary" link @click="editStaffHandle(scope.row)"><icon name="edit" />修改</el-button>
@@ -266,7 +273,7 @@ const submitStaffForm = () => {
           </el-col>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="staffForm.phone" placeholder="请输入"></el-input>
+              <el-input v-model="staffForm.email" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
