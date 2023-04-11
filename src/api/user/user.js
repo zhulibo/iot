@@ -227,10 +227,10 @@ export function getRouter(params) {
   })
 }
 
-// 获取用户信息
-export function getUserDetail(params) {
+// 查询用户详情
+export function getUserDetail(id, params) {
   return axios({
-    url: '/api/user/detail',
+    url: '/api/management/staff/' + id,
     method: 'get',
     params
   })
@@ -244,11 +244,11 @@ export function getUserDetail(params) {
 //   })
 // }
 
-// 编辑用户个人资料
-export function editUserInfo(params) {
-  return axios({
-    url: '/api/user/edit',
-    method: 'get',
-    params
-  })
-}
+// // 编辑用户个人资料
+// export function editUserInfo(params) {
+//   return axios({
+//     url: '/api/user/edit',
+//     method: 'get',
+//     params
+//   })
+// }

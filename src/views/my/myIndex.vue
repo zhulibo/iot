@@ -4,32 +4,39 @@ import {useUserStore} from "@/stores/user";
 import {nextTick, reactive, ref} from "vue";
 import {filterNone} from "@/utils/filter";
 import {ElMessage} from "element-plus";
-import {editUserInfo} from "@/api/user/user";
 import {validPwd} from "@/utils/validate";
 import {setDataAes} from "@/utils/aes2";
+import {editStaff} from "@/api/user/staffAdmin";
 
-const userInfo = useUserStore()
+const userStore = useUserStore()
 
 let userDetail = reactive({})
 const getUserDetailHandle = () => {
-  getUserDetail(userInfo.getUserInfo.userId)
+  let data = {
+    token: userStore.getUserInfo.token
+  }
+  getUserDetail(userStore.getUserInfo.id, data)
     .then(res => {
-      userDetail = res.data
+      userDetail.email = res.data.usersInfo.email
+      userDetail.fullName = res.data.usersInfo.fullName
+      userDetail.id = res.data.usersInfo.id
+      userDetail.phone = res.data.usersInfo.phone
+      userDetail.userName = res.data.usersInfo.userName
     })
 }
-// getUserDetailHandle()
+getUserDetailHandle()
 
 const dialogInfoVisible = ref(false)
 const userInfoFormRef = ref()
 
 // 编辑用户资料
-const editUserInfoHandle = async(row) => {
+const editUserInfoHandle = async() => {
   dialogInfoVisible.value = true
   await nextTick()
   for (const key in userInfoForm) {
     userInfoForm[key] = userDetail[key]
   }
-  userInfoForm.userId = row.userId
+  userInfoForm.id = userDetail.id
 }
 const userInfoForm = reactive({
   fullName: '',
@@ -45,7 +52,10 @@ const userInfoRules = reactive({
 const submitUserInfoForm = () => {
   userInfoFormRef.value.validate(valid => {
     if(valid) {
-      editUserInfo(userInfoForm)
+      let data = {
+        token: userStore.getUserInfo.token
+      }
+      editStaff(userStore.getUserInfo.id, data, userInfoForm)
         .then(res => {
           ElMessage.success(res.msg)
           dialogInfoVisible.value = false
@@ -76,11 +86,20 @@ const phoneRules = reactive({
 const submitPhoneForm = () => {
   phoneFormRef.value.validate(valid => {
     if(valid) {
-      resetPassword(phoneForm)
+      let data = {
+        token: userStore.getUserInfo.token
+      }
+      editStaff(userStore.getUserInfo.id, data, phoneForm)
         .then(res => {
           ElMessage.success(res.msg)
           dialogPhoneVisible.value = false
+          getUserDetailHandle()
         })
+      // resetPassword(phoneForm)
+      //   .then(res => {
+      //     ElMessage.success(res.msg)
+      //     dialogPhoneVisible.value = false
+      //   })
     }
   })
 }
@@ -125,14 +144,26 @@ const submitPasswordForm = () => {
   passwordFormRef.value.validate(valid => {
     if(valid) {
       let data = {
-        phone: userInfo.getUserInfo.phone,
+        token: userStore.getUserInfo.token
+      }
+      let data2 = {
         passWord: setDataAes(passwordForm.password)
       }
-      resetPassword(data)
+      editStaff(userStore.getUserInfo.id, data, data2)
         .then(res => {
           ElMessage.success(res.msg)
           dialogPasswordVisible.value = false
+          getUserDetailHandle()
         })
+      // let data = {
+      //   phone: userStore.getUserInfo.phone,
+      //   passWord: setDataAes(passwordForm.password)
+      // }
+      // resetPassword(data)
+      //   .then(res => {
+      //     ElMessage.success(res.msg)
+      //     dialogPasswordVisible.value = false
+      //   })
     }
   })
 }
@@ -148,7 +179,7 @@ const submitPasswordForm = () => {
       </div>
       <ul>
         <li>用户名：<span>{{filterNone(userDetail.userName)}}</span></li>
-        <li>姓名：<span>{{filterNone(userDetail.phone)}}</span></li>
+        <li>姓名：<span>{{filterNone(userDetail.fullName)}}</span></li>
         <li>邮箱：<span>{{filterNone(userDetail.email)}}</span></li>
       </ul>
     </div>
@@ -174,7 +205,7 @@ const submitPasswordForm = () => {
           </el-col>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="userInfoForm.phone" placeholder="请输入"></el-input>
+              <el-input v-model="userInfoForm.email" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
         </el-row>

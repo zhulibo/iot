@@ -1,6 +1,6 @@
 <script setup>
 import {nextTick, reactive, ref} from "vue";
-import {getDeviceList, addDevice, editDevice, delDevice} from "@/api/device/device";
+import {getDeviceList, addDevice, editDevice, delDevice, switchSub, createTopic} from "@/api/device/device";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useRouter} from "vue-router";
 import {useUserStore} from "@/stores/user";
@@ -11,13 +11,13 @@ const userStore = useUserStore()
 const schForm = reactive({
   token: userStore.getUserInfo.token,
   userName: userStore.getUserInfo.userName,
-  deviceId: '',
+  title: '',
   startTime: '',
   endTime: '',
   status: '',
   isSub: '',
   page: 1,
-  size: 1,
+  size: 10,
 })
 
 const loading = ref(true)
@@ -88,15 +88,16 @@ const multiDel = () => {
 
 // 删除设备
 const delDeviceHandle = (row) => {
-  ElMessageBox.confirm('确定删除 ' + row.deviceId, '提示', {
+  ElMessageBox.confirm('确定删除 ' + row.title, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   })
     .then(() => {
-      delDevice({
-        deviceId: row.deviceId
-      })
+      let params = {
+        token: userStore.getUserInfo.token
+      }
+      delDevice(row.id, params)
         .then(res => {
           ElMessage.success(res.msg)
           getDeviceListHandle()
@@ -150,11 +151,17 @@ const resetDeviceForm = () => {
 }
 
 const deviceForm = reactive({
-  deviceId: '',
+  title: '',
+  registerCode: '',
+  deviceType: '',
+  description: '',
+  owner: userStore.getUserInfo.userName,
 })
 
 const deviceRules = reactive({
-  deviceId: [{ required: true, message: '请输入', trigger: 'blur' }],
+  title: [{ required: true, message: '请输入', trigger: 'blur' }],
+  registerCode: [{ required: true, message: '请输入', trigger: 'blur' }],
+  deviceType: [{ required: true, message: '请输入', trigger: 'blur' }],
 })
 
 // 提交设备表单
@@ -169,7 +176,10 @@ const submitDeviceForm = () => {
             getDeviceListHandle()
           })
       }else{
-        addDevice(deviceForm)
+        let params = {
+          token: userStore.getUserInfo.token
+        }
+        addDevice(deviceForm, params)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
@@ -179,11 +189,36 @@ const submitDeviceForm = () => {
     }
   })
 }
-const sub = (row) => {
-  console.log('sub')
+
+const createTopicHandle = (row) => {
+  let params = {
+    token: userStore.getUserInfo.token
+  }
+  let data = {
+    userName: userStore.getUserInfo.userName,
+    deviceid: row.id,
+  }
+  createTopic(params, data)
+    .then(res => {
+      ElMessage.success(res.msg)
+      dialogEditVisible.value = false
+      getDeviceListHandle()
+    })
 }
-const unSub = (row) => {
-  console.log('unSub')
+const switchSubHandle = (row) => {
+  let params = {
+    token: userStore.getUserInfo.token
+  }
+  let data = {
+    deviceid: row.id,
+    status: row.status === 'UNSUBSCRIBE' ? 'SUBSCRIBE' : 'UNSUBSCRIBE'
+  }
+  switchSub(params, data)
+    .then(res => {
+      ElMessage.success(res.msg)
+      dialogEditVisible.value = false
+      getDeviceListHandle()
+    })
 }
 const upgrade = (row) => {
   console.log('upgrade')
@@ -198,8 +233,8 @@ const toLog = (row) => {
     <div class="table-head">
       <div class="sch">
         <el-form ref="schFormRef" :inline="true" :model="schForm">
-          <el-form-item label="设备id" prop="deviceId">
-            <el-input v-model="schForm.deviceId" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
+          <el-form-item label="设备名称" prop="title">
+            <el-input v-model="schForm.title" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
           <el-form-item label="创建时间" prop="startTime">
             <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起" style="width: 200px;" @change="getListHandle"></el-date-picker>
@@ -234,9 +269,18 @@ const toLog = (row) => {
     </div>
     <el-table ref="tableRef" :data="deviceList" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="created" label="创建时间" align="center" width="200" sortable></el-table-column>
-      <el-table-column prop="deviceId" label="设备id" min-width="140" sortable></el-table-column>
-      <el-table-column prop="title" label="title" min-width="140" sortable></el-table-column>
+      <el-table-column prop="created" label="创建时间" align="center" width="250" sortable></el-table-column>
+      <el-table-column prop="uuid" label="设备id" min-width="180" sortable></el-table-column>
+      <el-table-column prop="title" label="名称" min-width="140" sortable></el-table-column>
+      <el-table-column prop="registerCode" label="设备序列号" min-width="140" sortable></el-table-column>
+      <el-table-column prop="deviceType" label="设备类型" min-width="140" sortable></el-table-column>
+<!--      <el-table-column prop="status" label="设备状态" min-width="140" sortable>-->
+<!--        <template #default="scope">-->
+<!--          <el-button v-if="scope.row.status === '1'" type="info" link>未激活</el-button>-->
+<!--          <el-button v-else-if="scope.row.status === '2'" type="warning" link>离线</el-button>-->
+<!--          <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
       <el-table-column prop="status" label="设备状态" min-width="140" sortable>
         <template #default="scope">
           <el-button v-if="scope.row.status === '1'" type="info" link>未激活</el-button>
@@ -257,9 +301,15 @@ const toLog = (row) => {
 <!--      </el-table-column>-->
       <el-table-column label="操作" align="right" width="260" fixed="right" class-name="manage-td">
         <template #default="scope">
-          <el-button type="primary" link v-if="scope.row.isSub === 1" @click="upgrade(scope.row)"><icon name="edit" />升级</el-button>
-          <el-button type="primary" link @click="toLog(scope.row)"><icon name="deviceLog" />日志</el-button>
-          <el-button type="primary" link @click="editDeviceHandle(scope.row)"><icon name="edit" />修改</el-button>
+<!--          <el-button type="primary" link v-if="scope.row.isSub === 1" @click="upgrade(scope.row)"><icon name="edit" />升级</el-button>-->
+          <el-button type="primary" link @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
+          <el-button type="primary" link @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
+          <el-button type="primary" link @click="switchSubHandle(scope.row)"><icon name="edit" />取消订阅</el-button>
+<!--          <el-button type="primary" link v-if="scope.row.status === 'SUBSCRIBED'" @click="createTopic(scope.row)"><icon name="edit" />激活</el-button>-->
+<!--          <el-button type="primary" link v-if="scope.row.status === 'SUBSCRIBED'" @click="switchSub(scope.row)"><icon name="edit" />订阅</el-button>-->
+<!--          <el-button type="primary" link v-if="scope.row.status === 'UNSUBSCRIBE'" @click="switchSub(scope.row)"><icon name="edit" />取消订阅</el-button>-->
+<!--          <el-button type="primary" link @click="toLog(scope.row)"><icon name="deviceLog" />日志</el-button>-->
+          <el-button type="primary" link @click="editDeviceHandle(scope.row)" disabled><icon name="edit" />修改</el-button>
           <el-button type="warning" link @click="delDeviceHandle(scope.row)"><icon name="del" />删除</el-button>
         </template>
       </el-table-column>
@@ -268,12 +318,27 @@ const toLog = (row) => {
       <el-button type="danger" plain style="margin-left: 10px;" @click="multiDel" :disabled="multipleSelection.length === 0"><icon name="del" />删除</el-button>
     </div>
     <Page v-model:currentPage="schForm.page" :total="total" @getList="getDeviceListHandle"></Page>
-    <el-dialog v-model="dialogEditVisible" title="编辑设备" width="800px">
+    <el-dialog v-model="dialogEditVisible" title="编辑设备" width="500px">
       <el-form ref="deviceFormRef" :model="deviceForm" :rules="deviceRules" label-width="auto">
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="设备id" prop="deviceId">
-              <el-input v-model="deviceForm.deviceId" placeholder="请输入" disabled></el-input>
+          <el-col :span="24">
+            <el-form-item label="名称" prop="title">
+              <el-input v-model="deviceForm.title" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="设备序列号" prop="registerCode">
+              <el-input v-model="deviceForm.registerCode" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label=设备类型 prop="deviceType">
+              <el-input v-model="deviceForm.deviceType" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="描述" prop="description">
+              <el-input v-model="deviceForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" placeholder="请输入" />
             </el-form-item>
           </el-col>
         </el-row>

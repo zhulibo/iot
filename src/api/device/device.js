@@ -12,45 +12,20 @@ export function getDeviceMeasurement(params) {
 
 // 获取设备列表
 export function getDeviceList(params) {
-  // return new Promise(resolve => {
-  //   resolve({
-  //     code: 0,
-  //     data: [
-  //       {
-  //         createTime: '2021-12-29 16:50:55',
-  //         deviceId: '111111111111',
-  //         status: '1',
-  //         isSub: 0,
-  //       },
-  //       {
-  //         createTime: '2021-12-29 16:50:55',
-  //         deviceId: '22222222',
-  //         status: '2',
-  //         isSub: 1,
-  //       },
-  //       {
-  //         createTime: '2021-12-29 16:50:55',
-  //         deviceId: '3333',
-  //         status: '3',
-  //         isSub: 1,
-  //       }
-  //     ],
-  //     total: 2
-  //   })
-  // })
   return axios({
-    url: '/api/device/devicelistinfo',
+    url: '/api/device/deviceinfo',
     method: 'get',
     params
   })
 }
 
 // 新增设备
-export function addDevice(data) {
+export function addDevice(data, params) {
   return axios({
-    url: '/api/user/add',
+    url: '/api/device/deviceinfo',
     method: 'post',
-    data
+    data,
+    params
   })
 }
 
@@ -63,11 +38,31 @@ export function editDevice(data) {
   })
 }
 
-// 删除设备
-export function delDevice(data) {
+// 创建主题
+export function createTopic(params, data) {
   return axios({
-    url: '/api/user/del',
-    method: 'delete',
+    url: '/api/deviceHandle/iotsubdev',
+    method: 'post',
+    params,
     data
+  })
+}
+
+// 切换订阅设备
+export function switchSub(params, data) {
+  return axios({
+    url: '/api/deviceHandle/iotsubdev/subscribe',
+    method: 'post',
+    params,
+    data
+  })
+}
+
+// 删除设备
+export function delDevice(id, params) {
+  return axios({
+    url: '/api/device/deviceinfo/' + id,
+    method: 'delete',
+    params
   })
 }

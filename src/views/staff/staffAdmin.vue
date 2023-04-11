@@ -3,6 +3,8 @@ import {nextTick, reactive, ref} from "vue";
 import {getStaffList, addStaff, editStaff, delStaff} from "@/api/user/staffAdmin";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useUserStore} from "@/stores/user";
+import {setDataAes} from "@/utils/aes2";
+import {deepCopy} from "js-fragment";
 
 const userStore = useUserStore()
 
@@ -14,7 +16,7 @@ const schForm = reactive({
   endTime: '',
   status: undefined,
   page: 1,
-  size: 2
+  size: 10
 })
 
 const loading = ref(true)
@@ -106,9 +108,10 @@ const delStaffHandle = (row) => {
     type: 'warning'
   })
     .then(() => {
-      delStaff({
-        userId: row.userId
-      })
+      let data = {
+        token: userStore.getUserInfo.token
+      }
+      delStaff(row.id, data)
         .then(res => {
           ElMessage.success(res.msg)
           getStaffListHandle()
@@ -137,17 +140,18 @@ const editStaffHandle = async(row) => {
   for (const key in staffForm) {
     staffForm[key] = row[key]
   }
-  staffForm.userId = row.userId
+  staffForm.id = row.id
 }
 
 // 重置公司管理员表单
 const resetStaffForm = () => {
   staffFormRef.value.resetFields()
-  delete staffForm.userId
+  delete staffForm.id
 }
 
 const staffForm = reactive({
   userName: '',
+  passWord: '',
   fullName: '',
   phone: '',
   email: '',
@@ -157,7 +161,7 @@ const staffForm = reactive({
 const staffRules = reactive({
   userName: [{ required: true, message: '请输入', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入', trigger: 'blur' }],
-  status: [{ required: true, message: '请输入', trigger: 'blur' }],
+  // status: [{ required: true, message: '请输入', trigger: 'blur' }],
 })
 
 // 提交公司管理员表单
@@ -166,8 +170,13 @@ const submitStaffForm = () => {
     if(valid) {
       staffForm.isCompany = false
       staffForm.isStaff = true
-      if(staffForm.userId) {
-        editStaff(staffForm)
+      if(staffForm.id) {
+        delete staffForm.passWord
+        delete staffForm.userName
+        let data = {
+          token: userStore.getUserInfo.token
+        }
+        editStaff(staffForm.id, data, staffForm)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
@@ -177,7 +186,9 @@ const submitStaffForm = () => {
         let data = {
           token: userStore.getUserInfo.token,
         }
-        addStaff(staffForm, data)
+        let form = deepCopy(staffForm)
+        form.passWord = setDataAes(form.passWord)
+        addStaff(form, data)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
@@ -257,8 +268,13 @@ const submitStaffForm = () => {
       <el-form ref="staffFormRef" :model="staffForm" :rules="staffRules" label-width="auto">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="名称" prop="userName">
+            <el-form-item label="名称" prop="userName" :disabled="staffForm.id">
               <el-input v-model="staffForm.userName" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12" v-if="!staffForm.id">
+            <el-form-item label="密码" prop="passWord" :rules="[{ required: true, message: '请输入', trigger: 'blur' }]">
+              <el-input v-model="staffForm.passWord" placeholder="请输入"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">

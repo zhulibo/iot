@@ -20,19 +20,20 @@ export function addStaff(data, params) {
 }
 
 // 编辑公司管理员
-export function editStaff(data) {
+export function editStaff(id, token, data) {
   return axios({
-    url: '/api/user/update',
-    method: 'put',
+    url: '/api/management/staff/' + id,
+    method: 'patch',
+    params: token,
     data
   })
 }
 
 // 删除公司管理员
-export function delStaff(data) {
+export function delStaff(id, params) {
   return axios({
-    url: '/api/user/del',
+    url: '/api/management/staff/' + id,
     method: 'delete',
-    data
+    params
   })
 }
