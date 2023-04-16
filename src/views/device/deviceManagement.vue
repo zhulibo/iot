@@ -190,6 +190,7 @@ const submitDeviceForm = () => {
   })
 }
 
+// 激活
 const createTopicHandle = (row) => {
   let params = {
     token: userStore.getUserInfo.token
@@ -205,13 +206,15 @@ const createTopicHandle = (row) => {
       getDeviceListHandle()
     })
 }
+
+// 切换订阅
 const switchSubHandle = (row) => {
   let params = {
     token: userStore.getUserInfo.token
   }
   let data = {
     deviceid: row.id,
-    status: row.status === 'UNSUBSCRIBE' ? 'SUBSCRIBE' : 'UNSUBSCRIBE'
+    status: row.topicStatus === 'UNSUBSCRIBED' ? 'SUBSCRIBE' : 'UNSUBSCRIBE'
   }
   switchSub(params, data)
     .then(res => {
@@ -220,6 +223,7 @@ const switchSubHandle = (row) => {
       getDeviceListHandle()
     })
 }
+
 const upgrade = (row) => {
   console.log('upgrade')
 }
@@ -281,11 +285,10 @@ const toLog = (row) => {
 <!--          <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
-      <el-table-column prop="status" label="设备状态" min-width="140" sortable>
+      <el-table-column prop="topicStatus" label="订阅状态" min-width="140" sortable>
         <template #default="scope">
-          <el-button v-if="scope.row.status === '1'" type="info" link>未激活</el-button>
-          <el-button v-else-if="scope.row.status === '2'" type="warning" link>离线</el-button>
-          <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>
+          <el-tag type="success" v-if="scope.row.topicStatus === 'SUBSCRIBED'">订阅</el-tag>
+          <el-tag type="info" v-else-if="scope.row.topicStatus === 'UNSUBSCRIBED'">未订阅</el-tag>
         </template>
       </el-table-column>
 <!--      <el-table-column prop="isSub" label="订阅状态" min-width="140" sortable>-->
@@ -302,12 +305,9 @@ const toLog = (row) => {
       <el-table-column label="操作" align="right" width="260" fixed="right" class-name="manage-td">
         <template #default="scope">
 <!--          <el-button type="primary" link v-if="scope.row.isSub === 1" @click="upgrade(scope.row)"><icon name="edit" />升级</el-button>-->
-          <el-button type="primary" link @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
-          <el-button type="primary" link @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
-          <el-button type="primary" link @click="switchSubHandle(scope.row)"><icon name="edit" />取消订阅</el-button>
-<!--          <el-button type="primary" link v-if="scope.row.status === 'SUBSCRIBED'" @click="createTopic(scope.row)"><icon name="edit" />激活</el-button>-->
-<!--          <el-button type="primary" link v-if="scope.row.status === 'SUBSCRIBED'" @click="switchSub(scope.row)"><icon name="edit" />订阅</el-button>-->
-<!--          <el-button type="primary" link v-if="scope.row.status === 'UNSUBSCRIBE'" @click="switchSub(scope.row)"><icon name="edit" />取消订阅</el-button>-->
+          <el-button type="primary" link v-if="scope.row.status === 'UNACTIVE'" @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
+          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'UNSUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
+          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'SUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />退订</el-button>
 <!--          <el-button type="primary" link @click="toLog(scope.row)"><icon name="deviceLog" />日志</el-button>-->
           <el-button type="primary" link @click="editDeviceHandle(scope.row)" disabled><icon name="edit" />修改</el-button>
           <el-button type="warning" link @click="delDeviceHandle(scope.row)"><icon name="del" />删除</el-button>

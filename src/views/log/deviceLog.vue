@@ -1,20 +1,20 @@
 <script setup>
-import {ref} from "vue";
+import {onUnmounted, ref} from "vue";
 import {ElMessage} from "element-plus";
-import {useRoute} from "vue-router";
 import {getDeviceList} from "@/api/device/device";
 import {useUserStore} from "@/stores/user";
+import Socket from "@/utils/socket";
 
-const route = useRoute()
 const userStore = useUserStore()
-const deviceId = route.query.deviceId
+const userName = userStore.getUserInfo.userName
+const token = userStore.getUserInfo.token
 
 let deviceList = ref([])
 
 const getDeviceListHandle = () => {
   let data = {
-    token: userStore.getUserInfo.token,
-    userName: userStore.getUserInfo.userName,
+    token: token,
+    userName: userName,
     size: 999,
     page: 1,
   }
@@ -26,32 +26,42 @@ const getDeviceListHandle = () => {
 getDeviceListHandle()
 
 let deviceItem = ref({})
-const changeDevice = (item) => {
-  // if(item.status === '1') {
-  //   return ElMessage.warning('该设备未激活')
-  // }
-  logList.value = []
-  deviceItem.value = item
-  if(socket){
-    socket.close()
-  }
-  getLogList()
-}
-
-let socket
 let logList = ref([])
-const getLogList = () => {
-  socket = new WebSocket(`ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/room/123?authorization=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwibmFtZSI6Imxhb2JhbiIsImV4cCI6MTY4MDQxMzM0OH0.Jus2G2fyzcG4liKeIY056iOWTO4eXp7by4sj-Cp4MG4`)
-  socket.onopen = (res) => {
-    console.log('onopen', res)
-  }
-  socket.onmessage = (res) => {
-    console.log('onmessage', res)
+
+let socket = new Socket({
+  url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceLog?authorization=${token}`,
+  onmessage: (res) => {
     if(res.data) {
-      logList.value.push(JSON.parse(res.data))
+      logList.value.push(res)
     }
   }
+})
+
+const changeDevice = (item) => {
+  if(item.status === 'UNACTIVE') {
+    return ElMessage.warning('该设备未激活')
+  }
+  if(item.topicStatus === 'UNSUBSCRIBED') {
+    return ElMessage.warning('该设备未订阅')
+  }
+  logList.value = []
+  let data = {
+    userName: userName,
+    oldDeviceId: deviceItem.value.id,
+    newDeviceId: item.id
+  }
+  if(data.oldDeviceId === '') delete data.oldDeviceId
+  socket.send(data)
+  deviceItem.value = item
 }
+
+onUnmounted(() => {
+  socket.send({
+    userName: userName,
+    oldDeviceId: deviceItem.value.id,
+  })
+  socket.destroy()
+})
 </script>
 
 <template>

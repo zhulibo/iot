@@ -23,13 +23,13 @@ export default class Socket {
     }
 
     this.socket = new WebSocket(this.options.url)
+    // 把WebSocket的回调事件赋给Socket类
     this.socket.onopen = this.onopen.bind(this)
     this.socket.onmessage = this.onmessage.bind(this)
     this.socket.onerror = this.onerror.bind(this)
     this.socket.onclose = this.onclose.bind(this)
   }
   onopen(res) {
-    console.log('onopen', res)
     this.options.onopen && this.options.onopen(res)
     this.resetHeartbeat()
   }
@@ -40,23 +40,20 @@ export default class Socket {
   }
   heartbeat() {
     this.heartbeatTimer = setInterval(() => {
-      console.log('heartbeat ping')
-      this.socket.send('ping')
+      this.send(JSON.stringify({data: 'ping'}))
     }, this.heartbeatInterval)
   }
   onmessage(res) {
     this.resetHeartbeat()
-    if(res.data === 'pong') {
+    if(res.type && res.type === 'pong') {
       return
     }
-    console.log('onmessage', res)
-    this.options.onmessage && this.options.onmessage(res)
+    this.options.onmessage && this.options.onmessage(JSON.parse(res.data))
   }
   send(data, cb) {
     // OPEN状态直接发送
     if(this.socket.readyState === this.socket.OPEN) {
-      console.log('send', data)
-      this.socket.send(data)
+      this.socket.send(JSON.stringify(data))
       // 回调
       if(cb) cb()
     }
@@ -64,15 +61,15 @@ export default class Socket {
     else if(this.socket.readyState === this.socket.CONNECTING) {
       console.log('readyState: CONNECTING, reSend 1s later', data)
       setTimeout(() => {
-        this.socket.send(data, cb)
+        this.send(data, cb)
       }, 1000)
     }
     // CLOSING、CLOSED
     else {
-      this.socket.init()
+      this.init()
       console.log('readyState: CLOSING、CLOSED, reSend 1s later', data)
       setTimeout(() => {
-        this.socket.send(data, cb)
+        this.send(data, cb)
       }, 1000)
     }
   }
