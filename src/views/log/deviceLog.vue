@@ -31,9 +31,7 @@ let logList = ref([])
 let socket = new Socket({
   url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceLog?authorization=${token}`,
   onmessage: (res) => {
-    if(res.data) {
-      logList.value.push(res)
-    }
+    logList.value.push(res)
   }
 })
 

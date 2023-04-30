@@ -13,6 +13,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
+        // target: 'http://q3758961w1.goho.co:31715',
         target: 'http://47.94.165.5:8080',
         // target: 'http://localhost:3000',
         rewrite: (path) => path.replace(/^\/api/, '')

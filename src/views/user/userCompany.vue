@@ -5,10 +5,13 @@ import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useUserStore} from "@/stores/user";
 import {setDataAes} from "@/utils/aes2";
 import {deepCopy} from "js-fragment";
+import {useRoute} from "vue-router";
 
 const userStore = useUserStore()
+const route = useRoute()
 
 const schForm = reactive({
+  title: route.meta.title,
   token: userStore.getUserInfo.token,
   userName: '',
   fullName: '',
@@ -231,7 +234,7 @@ const submitStaffForm = () => {
         </el-form>
       </div>
       <div class="new-item">
-<!--        <el-button type="primary" @click="addStaffHandle"><icon name="add" />新增</el-button>-->
+        <el-button type="primary" @click="addStaffHandle"><icon name="add" />新增</el-button>
       </div>
     </div>
     <el-table ref="tableRef" :data="staffList" v-loading="loading" @selection-change="handleSelectionChange">

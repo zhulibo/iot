@@ -5,10 +5,13 @@ import {ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useUserStore} from "@/stores/user";
 import {setDataAes} from "@/utils/aes2";
 import {deepCopy} from "js-fragment";
+import {useRoute} from "vue-router";
 
 const userStore = useUserStore()
+const route = useRoute()
 
 const schForm = reactive({
+  title: route.meta.title,
   token: userStore.getUserInfo.token,
   userName: '',
   fullName: '',

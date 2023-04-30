@@ -1,9 +1,20 @@
 <script setup>
 import {nextTick, reactive, ref} from "vue";
-import {getDeviceList, addDevice, editDevice, delDevice, switchSub, createTopic} from "@/api/device/device";
-import {ElMessage, ElMessageBox, ElTable} from "element-plus";
+import {
+  addDevice,
+  createTopic,
+  delDevice,
+  editDevice,
+  getDeviceList,
+  switchSub,
+  multiUpgradeDevice,
+  getDeviceTypeList,
+} from "@/api/device/device";
+import {ElLoading, ElMessage, ElMessageBox, ElTable} from "element-plus";
 import {useRouter} from "vue-router";
 import {useUserStore} from "@/stores/user";
+import Uploader from "@/components/uploader/Uploader.vue";
+import Socket from "@/utils/socket";
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -20,7 +31,7 @@ const schForm = reactive({
   size: 10,
 })
 
-const loading = ref(true)
+const loading = ref(false)
 const deviceList = ref([])
 const total = ref(0)
 const tableRef = ref()
@@ -224,8 +235,102 @@ const switchSubHandle = (row) => {
     })
 }
 
-const upgrade = (row) => {
-  console.log('upgrade')
+// 升级
+let dialogUpgradeVisible = ref(false)
+let upgradeDeviceFormRef = ref()
+const deviceUpgradeForm = reactive({
+  fileUrl: '',
+})
+
+const deviceUpgradeRules = reactive({
+  fileUrl: [{ required: true, message: '请上传', trigger: 'blur' }],
+})
+const upgradeHandle = (row) => {
+  deviceUpgradeForm.deviceSingleUpgradeId = row.id
+  dialogUpgradeVisible.value = true
+}
+const submitUpgradeDeviceForm = () => {
+  upgradeDeviceFormRef.value.validate(valid => {
+    if (valid) {
+      const loading = ElLoading.service({
+        lock: true,
+        text: '升级中，请勿关闭页面！',
+        background: 'rgba(255, 255, 255, 0.8)',
+      })
+      let socket = new Socket({
+        url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceSingleUpgrade?authorization=${userStore.getUserInfo.token}`,
+        protocols: userStore.getUserInfo.token,
+        onmessage: (res) => {
+          if(res.code === '0') {
+            let data = deviceUpgradeForm
+            data.userDeviceSingleUpgradeClose = 'ok'
+            socket.send(data)
+            socket.destroy()
+            dialogUpgradeVisible.value = false
+            loading.close()
+            ElMessage.success('升级成功')
+          }
+        }
+      })
+      deviceUpgradeForm.userName = userStore.getUserInfo.userName
+      socket.send(deviceUpgradeForm)
+    }
+  })
+}
+// 批量升级
+let deviceTypeList = ref([])
+let params = {
+  token: userStore.getUserInfo.token
+}
+getDeviceTypeList(params)
+  .then(res => {
+    deviceTypeList.value = res.data
+  })
+let dialogMultiUpgradeVisible = ref(false)
+let multiUpgradeDeviceFormRef = ref()
+const deviceMultiUpgradeForm = reactive({
+  deviceMultiUpgradeType: '',
+  fileUrl: '',
+})
+
+const deviceMultiUpgradeRules = reactive({
+  deviceMultiUpgradeType: [{ required: true, message: '请选择', trigger: 'blur' }],
+  fileUrl: [{ required: true, message: '请上传', trigger: 'blur' }],
+})
+const multiUpgradeHandle = (row) => {
+  dialogMultiUpgradeVisible.value = true
+}
+const submitMultiUpgradeDeviceForm = () => {
+  multiUpgradeDeviceFormRef.value.validate(valid => {
+    if (valid) {
+      const loading = ElLoading.service({
+        lock: true,
+        text: '升级中，请勿关闭页面！',
+        background: 'rgba(255, 255, 255, 0.8)',
+      })
+      let socket = new Socket({
+        url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceMultiUpgrade?authorization=${userStore.getUserInfo.token}`,
+        protocols: userStore.getUserInfo.token,
+        onmessage: (res) => {
+          if(res.code === '0') {
+            let data = deviceMultiUpgradeForm
+            data.userDeviceMultiUpgradeClose = 'ok'
+            socket.send(data)
+            socket.destroy()
+            dialogMultiUpgradeVisible.value = false
+            loading.close()
+            ElMessage.success('升级成功')
+          }
+        }
+      })
+      deviceMultiUpgradeForm.userName = userStore.getUserInfo.userName
+      socket.send(deviceMultiUpgradeForm)
+    }
+  })
+}
+
+const handleSuccess = () => {
+
 }
 const toLog = (row) => {
   router.push({ path: '/login', query: {deviceId: row.deviceId}})
@@ -268,13 +373,14 @@ const toLog = (row) => {
         </el-form>
       </div>
       <div class="new-item">
+        <el-button type="success" @click="multiUpgradeHandle"><icon name="add" />批量升级</el-button>
         <el-button type="primary" @click="addDeviceHandle"><icon name="add" />新增</el-button>
       </div>
     </div>
     <el-table ref="tableRef" :data="deviceList" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="40" />
       <el-table-column prop="created" label="创建时间" align="center" width="250" sortable></el-table-column>
-      <el-table-column prop="uuid" label="设备id" min-width="180" sortable></el-table-column>
+      <el-table-column prop="id" label="设备id" min-width="240" sortable></el-table-column>
       <el-table-column prop="title" label="名称" min-width="140" sortable></el-table-column>
       <el-table-column prop="registerCode" label="设备序列号" min-width="140" sortable></el-table-column>
       <el-table-column prop="deviceType" label="设备类型" min-width="140" sortable></el-table-column>
@@ -285,7 +391,7 @@ const toLog = (row) => {
 <!--          <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
-      <el-table-column prop="topicStatus" label="订阅状态" min-width="140" sortable>
+      <el-table-column prop="topicStatus" label="订阅状态" min-width="120" sortable>
         <template #default="scope">
           <el-tag type="success" v-if="scope.row.topicStatus === 'SUBSCRIBED'">订阅</el-tag>
           <el-tag type="info" v-else-if="scope.row.topicStatus === 'UNSUBSCRIBED'">未订阅</el-tag>
@@ -304,7 +410,7 @@ const toLog = (row) => {
 <!--      </el-table-column>-->
       <el-table-column label="操作" align="right" width="260" fixed="right" class-name="manage-td">
         <template #default="scope">
-<!--          <el-button type="primary" link v-if="scope.row.isSub === 1" @click="upgrade(scope.row)"><icon name="edit" />升级</el-button>-->
+          <el-button type="success" link v-if="scope.row.status === 'ACTIVE'" @click="upgradeHandle(scope.row)"><icon name="add" />升级</el-button>
           <el-button type="primary" link v-if="scope.row.status === 'UNACTIVE'" @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
           <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'UNSUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
           <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'SUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />退订</el-button>
@@ -347,6 +453,47 @@ const toLog = (row) => {
         <span class="dialog-footer">
           <el-button @click="dialogEditVisible = false">取消</el-button>
           <el-button type="primary" @click="submitDeviceForm">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="dialogUpgradeVisible" title="升级设备" width="500px">
+      <el-form ref="upgradeDeviceFormRef" :model="deviceUpgradeForm" :rules="deviceUpgradeRules" label-width="auto">
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="升级文件" prop="fileUrl">
+              <Uploader v-model="deviceUpgradeForm.fileUrl"></Uploader>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogUpgradeVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitUpgradeDeviceForm">升级</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="dialogMultiUpgradeVisible" title="批量升级设备" width="500px">
+      <el-form ref="multiUpgradeDeviceFormRef" :model="deviceMultiUpgradeForm" :rules="deviceMultiUpgradeRules" label-width="auto">
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="设备类型" prop="deviceMultiUpgradeType">
+              <el-select v-model="deviceMultiUpgradeForm.deviceMultiUpgradeType">
+                <el-option v-for="item in deviceTypeList" :label="item" :key="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="升级文件" prop="fileUrl">
+              <Uploader v-model="deviceMultiUpgradeForm.fileUrl"></Uploader>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogMultiUpgradeVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitMultiUpgradeDeviceForm">升级</el-button>
         </span>
       </template>
     </el-dialog>

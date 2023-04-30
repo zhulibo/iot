@@ -56,3 +56,32 @@ export function delDevice(id, params) {
     params
   })
 }
+
+// 升级设备
+export function upgradeDevice(params, data) {
+  return axios({
+    url: '/api/device/upgradeDevice',
+    method: 'post',
+    params,
+    data,
+  })
+}
+
+// 批量升级设备
+export function multiUpgradeDevice(params, data) {
+  return axios({
+    url: '/api/device/multiUpgradeDevice',
+    method: 'post',
+    params,
+    data,
+  })
+}
+
+// 获取升级类型
+export function getDeviceTypeList(params) {
+  return axios({
+    url: '/api/device/devicetypeinfo',
+    method: 'get',
+    params
+  })
+}
