@@ -22,7 +22,7 @@ const schForm = reactive({
   size: 10
 })
 
-const loading = ref(true)
+const loading = ref(false)
 const staffList = ref([])
 const total = ref(0)
 const tableRef = ref()

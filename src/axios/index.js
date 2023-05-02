@@ -14,7 +14,8 @@ axios.interceptors.request.use(
 
     const token = userStore.getUserInfo && userStore.getUserInfo.token || ''
     if (token) {
-      config.headers.Authorization = 'Bearer ' + token
+      config.params.token = token
+      // config.headers.Authorization = 'Bearer ' + token
     }
     return config
   },
