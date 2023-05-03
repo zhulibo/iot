@@ -3,12 +3,11 @@ import {useUserStore} from "@/stores/user";
 import {onMounted, onUnmounted, ref, reactive} from "vue";
 import Socket from "@/utils/socket";
 import * as echarts from 'echarts';
+import 'echarts/extension/bmap/bmap';
 import { debounce } from 'js-fragment'
 import {convertData, data} from "./components/data";
-import 'echarts/extension/bmap/bmap';
 
 const userInfo = useUserStore()
-const token = userInfo.getUserInfo.token
 const userName = userInfo.getUserInfo.userName
 
 // let msgList = ref([])
@@ -32,17 +31,22 @@ const userName = userInfo.getUserInfo.userName
 
 const chartMapOption = reactive({
   title: {
-    text: '全国主要城市空气质量 - 百度地图',
-    subtext: 'data from PM25.in',
+    text: '环境监测平台',
+    subtext: '副标题',
     sublink: 'http://www.pm25.in',
     left: 'center'
   },
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: function (params) {
+      return params.name + '<br/>' +
+        'co: ' + params.data.value[2] + '<br/>' +
+        'co2: ' + params.data.value2[2];
+    }
   },
   bmap: {
-    center: [104.114129, 37.550339],
-    zoom: 5,
+    center: [110, 35],
+    zoom: 5.5,
     roam: true,
     mapStyle: {
       styleJson: [
@@ -163,47 +167,16 @@ const chartMapOption = reactive({
   },
   series: [
     {
-      name: 'pm2.5',
+      name: '设备数据',
       type: 'scatter',
       coordinateSystem: 'bmap',
       data: convertData(data),
       symbolSize: function (val) {
-        return val[2] / 10;
+        return 14;
+        // return val[2] / 10;
       },
       encode: {
         value: 2
-      },
-      label: {
-        formatter: '{b}',
-        position: 'right',
-        show: false
-      },
-      emphasis: {
-        label: {
-          show: true
-        }
-      }
-    },
-    {
-      name: 'Top 5',
-      type: 'effectScatter',
-      coordinateSystem: 'bmap',
-      data: convertData(
-        data
-          .sort(function (a, b) {
-            return b.value - a.value;
-          })
-          .slice(0, 6)
-      ),
-      symbolSize: function (val) {
-        return val[2] / 10;
-      },
-      encode: {
-        value: 2
-      },
-      showEffectOn: 'render',
-      rippleEffect: {
-        brushType: 'stroke'
       },
       label: {
         formatter: '{b}',
@@ -211,30 +184,31 @@ const chartMapOption = reactive({
         show: true
       },
       itemStyle: {
+        color: '#2a8dff',
         shadowBlur: 10,
-        shadowColor: '#333'
+        shadowColor: '#666'
       },
       emphasis: {
-        scale: true
-      },
-      zlevel: 1
-    }
+        label: {
+          show: true
+        }
+      }
+    },
   ]
 })
-
 let chartMap
 let debounceLine
 
-// onMounted(() => {
-//   debounceLine = debounce(() => {
-//     if(chartMap){
-//       chartMap.resize()
-//     }
-//   }, 200)
-//   setTimeout(() => {
-//     initChartLine()
-//   }, 200)
-// })
+onMounted(() => {
+  debounceLine = debounce(() => {
+    if(chartMap){
+      chartMap.resize()
+    }
+  }, 200)
+  setTimeout(() => {
+    initChartLine()
+  }, 200)
+})
 
 // 初始化图表
 const initChartLine = () => {
@@ -253,7 +227,7 @@ const initChartLine = () => {
 </template>
 <style lang="pcss" scoped>
 #chart-map{
-  width: 1000px;
-  height: 800px;
+  width: 100%;
+  height: calc(100vh - 103px);
 }
 </style>

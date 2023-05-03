@@ -1,15 +1,13 @@
 export const data = [
-  { name: '海门', value: 9 },
-  { name: '鄂尔多斯', value: 12 },
-  { name: '招远', value: 12 },
-  { name: '舟山', value: 12 },
+  { name: '设备1', value: 90, value2: 92 },
+  { name: '设备2', value: 120, value2: 122 },
+  { name: '设备3', value: 120, value2: 122 },
 ]
 
 const geoCoordMap = {
-  海门: [121.15, 31.89],
-  鄂尔多斯: [109.781327, 39.608266],
-  招远: [120.38, 37.35],
-  舟山: [122.207216, 29.985295],
+  设备1: [111, 30],
+  设备2: [109, 39],
+  设备3: [121, 37],
 }
 
 export function convertData(data) {
@@ -19,7 +17,8 @@ export function convertData(data) {
     if (geoCoord) {
       res.push({
         name: data[i].name,
-        value: geoCoord.concat(data[i].value)
+        value: geoCoord.concat(data[i].value),
+        value2: geoCoord.concat(data[i].value2)
       });
     }
   }
