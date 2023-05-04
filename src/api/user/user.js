@@ -23,11 +23,11 @@ export function login(data) {
       msg: '成功'
     })
   })
-  // return axios({
-  //   url: '/api/login',
-  //   method: 'post',
-  //   data
-  // })
+  return axios({
+    url: '/api/login',
+    method: 'post',
+    data
+  })
 }
 
 // 注册
@@ -48,6 +48,7 @@ export function resetPassword(data) {
   })
 }
 
+// 获取路由信息
 export function getRouter(params) {
   return new Promise(resolve => {
     resolve({
@@ -219,15 +220,12 @@ export function getRouter(params) {
       msg: "请求成功"
     })
   })
+  return axios({
+    url: '/api/getRouter',
+    method: 'get',
+    params
+  })
 }
-// 获取路由信息
-// export function getRouter(params) {
-//   return axios({
-//     url: '/api/getRouter',
-//     method: 'get',
-//     params
-//   })
-// }
 
 // 查询用户详情
 export function getUserDetail(id, params) {
