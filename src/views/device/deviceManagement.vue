@@ -7,20 +7,18 @@ import {
   editDevice,
   getDeviceList,
   switchSub,
-  multiUpgradeDevice,
   getDeviceTypeList,
 } from "@/api/device/device";
 import {ElLoading, ElMessage, ElMessageBox, ElTable} from "element-plus";
-import {useRouter} from "vue-router";
+// import {useRouter} from "vue-router";
 import {useUserStore} from "@/stores/user";
 import Uploader from "@/components/uploader/Uploader.vue";
 import Socket from "@/utils/socket";
 
-const router = useRouter()
+// const router = useRouter()
 const userStore = useUserStore()
 
 const schForm = reactive({
-  token: userStore.getUserInfo.token,
   userName: userStore.getUserInfo.userName,
   title: '',
   startTime: '',
@@ -105,10 +103,7 @@ const delDeviceHandle = (row) => {
     type: 'warning'
   })
     .then(() => {
-      let params = {
-        token: userStore.getUserInfo.token
-      }
-      delDevice(row.id, params)
+      delDevice(row.id)
         .then(res => {
           ElMessage.success(res.msg)
           getDeviceListHandle()
@@ -123,19 +118,19 @@ const dialogEditVisible = ref(false)
 const deviceFormRef = ref()
 
 // 切换订阅状态
-const switchStatus = (row) => {
-  loading.value = true
-  const data = {
-    deviceId: row.deviceId,
-    isSub: row.isSub,
-  }
-  editDevice(data).then(res => {
-    ElMessage.success(res.msg)
-    getDeviceListHandle()
-  }).catch(() => {
-    getDeviceListHandle()
-  })
-}
+// const switchStatus = (row) => {
+//   loading.value = true
+//   const data = {
+//     deviceId: row.deviceId,
+//     isSub: row.isSub,
+//   }
+//   editDevice(data).then(res => {
+//     ElMessage.success(res.msg)
+//     getDeviceListHandle()
+//   }).catch(() => {
+//     getDeviceListHandle()
+//   })
+// }
 
 // 新增设备
 const addDeviceHandle = async() => {
@@ -143,17 +138,50 @@ const addDeviceHandle = async() => {
   await nextTick()
   resetDeviceForm()
 }
-
-// 编辑设备
-const editDeviceHandle = async(row) => {
-  dialogEditVisible.value = true
+const dialogMapVisible = ref(false)
+let address = reactive({
+  latitude: '',
+  longitude: '',
+})
+// 打开地图
+const openMap = async() => {
+  dialogMapVisible.value = true
   await nextTick()
-  resetDeviceForm()
-  for (const key in deviceForm) {
-    deviceForm[key] = row[key]
-  }
-  deviceForm.deviceId = row.deviceId
+  //实例化地图
+  // eslint-disable-next-line no-undef
+  let map = new BMap.Map('map')
+  // eslint-disable-next-line no-undef
+  map.centerAndZoom(new BMap.Point(110,35), 6)
+  map.enableScrollWheelZoom(true)
+  // eslint-disable-next-line no-undef
+  let geoc = new BMap.Geocoder()
+  map.addEventListener('click', function(e){
+    map.clearOverlays()
+    let pt = e.point
+    // eslint-disable-next-line no-undef
+    let marker = new BMap.Marker(new BMap.Point(pt.lng, pt.lat))
+    map.addOverlay(marker)
+    geoc.getLocation(pt, function(){
+      address.latitude = pt.lat
+      address.longitude = pt.lng
+    })
+  })
 }
+const confirmMap = () => {
+  deviceForm.latitude = address.latitude
+  deviceForm.longitude = address.longitude
+  dialogMapVisible.value = false
+}
+// 编辑设备
+// const editDeviceHandle = async(row) => {
+//   dialogEditVisible.value = true
+//   await nextTick()
+//   resetDeviceForm()
+//   for (const key in deviceForm) {
+//     deviceForm[key] = row[key]
+//   }
+//   deviceForm.deviceId = row.deviceId
+// }
 
 // 重置设备表单
 const resetDeviceForm = () => {
@@ -165,6 +193,8 @@ const deviceForm = reactive({
   title: '',
   registerCode: '',
   deviceType: '',
+  latitude: '',
+  longitude: '',
   description: '',
   owner: userStore.getUserInfo.userName,
 })
@@ -173,6 +203,8 @@ const deviceRules = reactive({
   title: [{ required: true, message: '请输入', trigger: 'blur' }],
   registerCode: [{ required: true, message: '请输入', trigger: 'blur' }],
   deviceType: [{ required: true, message: '请输入', trigger: 'blur' }],
+  latitude: [{ required: true, message: '请选择', trigger: 'blur' }],
+  longitude: [{ required: true, message: '请选择', trigger: 'blur' }],
 })
 
 // 提交设备表单
@@ -187,10 +219,7 @@ const submitDeviceForm = () => {
             getDeviceListHandle()
           })
       }else{
-        let params = {
-          token: userStore.getUserInfo.token
-        }
-        addDevice(deviceForm, params)
+        addDevice(deviceForm)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
@@ -203,14 +232,11 @@ const submitDeviceForm = () => {
 
 // 激活
 const createTopicHandle = (row) => {
-  let params = {
-    token: userStore.getUserInfo.token
-  }
   let data = {
     userName: userStore.getUserInfo.userName,
     deviceid: row.id,
   }
-  createTopic(params, data)
+  createTopic(data)
     .then(res => {
       ElMessage.success(res.msg)
       dialogEditVisible.value = false
@@ -220,14 +246,11 @@ const createTopicHandle = (row) => {
 
 // 切换订阅
 const switchSubHandle = (row) => {
-  let params = {
-    token: userStore.getUserInfo.token
-  }
   let data = {
     deviceid: row.id,
     status: row.topicStatus === 'UNSUBSCRIBED' ? 'SUBSCRIBE' : 'UNSUBSCRIBE'
   }
-  switchSub(params, data)
+  switchSub(data)
     .then(res => {
       ElMessage.success(res.msg)
       dialogEditVisible.value = false
@@ -246,6 +269,7 @@ const deviceUpgradeRules = reactive({
   fileUrl: [{ required: true, message: '请上传', trigger: 'blur' }],
 })
 const upgradeHandle = (row) => {
+  deviceUpgradeForm.fileUrl = ''
   deviceUpgradeForm.deviceSingleUpgradeId = row.id
   dialogUpgradeVisible.value = true
 }
@@ -258,8 +282,7 @@ const submitUpgradeDeviceForm = () => {
         background: 'rgba(255, 255, 255, 0.8)',
       })
       let socket = new Socket({
-        url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceSingleUpgrade?authorization=${userStore.getUserInfo.token}`,
-        protocols: userStore.getUserInfo.token,
+        url: `/apiws/deviceSingleUpgrade?authorization=${userStore.getUserInfo.token}`,
         onmessage: (res) => {
           if(res.code === '0') {
             let data = deviceUpgradeForm
@@ -279,10 +302,7 @@ const submitUpgradeDeviceForm = () => {
 }
 // 批量升级
 let deviceTypeList = ref([])
-let params = {
-  token: userStore.getUserInfo.token
-}
-getDeviceTypeList(params)
+getDeviceTypeList()
   .then(res => {
     deviceTypeList.value = res.data
   })
@@ -297,7 +317,9 @@ const deviceMultiUpgradeRules = reactive({
   deviceMultiUpgradeType: [{ required: true, message: '请选择', trigger: 'blur' }],
   fileUrl: [{ required: true, message: '请上传', trigger: 'blur' }],
 })
-const multiUpgradeHandle = (row) => {
+const multiUpgradeHandle = () => {
+  deviceMultiUpgradeForm.deviceMultiUpgradeType = ''
+  deviceMultiUpgradeForm.fileUrl = ''
   dialogMultiUpgradeVisible.value = true
 }
 const submitMultiUpgradeDeviceForm = () => {
@@ -309,8 +331,7 @@ const submitMultiUpgradeDeviceForm = () => {
         background: 'rgba(255, 255, 255, 0.8)',
       })
       let socket = new Socket({
-        url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceMultiUpgrade?authorization=${userStore.getUserInfo.token}`,
-        protocols: userStore.getUserInfo.token,
+        url: `/apiws/deviceMultiUpgrade?authorization=${userStore.getUserInfo.token}`,
         onmessage: (res) => {
           if(res.code === '0') {
             let data = deviceMultiUpgradeForm
@@ -329,12 +350,12 @@ const submitMultiUpgradeDeviceForm = () => {
   })
 }
 
-const handleSuccess = () => {
-
-}
-const toLog = (row) => {
-  router.push({ path: '/login', query: {deviceId: row.deviceId}})
-}
+// const handleSuccess = () => {
+//
+// }
+// const toLog = (row) => {
+//   router.push({ path: '/login', query: {deviceId: row.deviceId}})
+// }
 </script>
 
 <template>
@@ -380,7 +401,7 @@ const toLog = (row) => {
     <el-table ref="tableRef" :data="deviceList" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="40" />
       <el-table-column prop="created" label="创建时间" align="center" width="250" sortable></el-table-column>
-      <el-table-column prop="id" label="设备id" min-width="240" sortable></el-table-column>
+      <el-table-column prop="id" label="设备id" min-width="260" sortable></el-table-column>
       <el-table-column prop="title" label="名称" min-width="140" sortable></el-table-column>
       <el-table-column prop="registerCode" label="设备序列号" min-width="140" sortable></el-table-column>
       <el-table-column prop="deviceType" label="设备类型" min-width="140" sortable></el-table-column>
@@ -415,7 +436,7 @@ const toLog = (row) => {
           <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'UNSUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
           <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'SUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />退订</el-button>
 <!--          <el-button type="primary" link @click="toLog(scope.row)"><icon name="deviceLog" />日志</el-button>-->
-          <el-button type="primary" link @click="editDeviceHandle(scope.row)" disabled><icon name="edit" />修改</el-button>
+<!--          <el-button type="primary" link @click="editDeviceHandle(scope.row)" disabled><icon name="edit" />修改</el-button>-->
           <el-button type="warning" link @click="delDeviceHandle(scope.row)"><icon name="del" />删除</el-button>
         </template>
       </el-table-column>
@@ -424,7 +445,7 @@ const toLog = (row) => {
       <el-button type="danger" plain style="margin-left: 10px;" @click="multiDel" :disabled="multipleSelection.length === 0"><icon name="del" />删除</el-button>
     </div>
     <Page v-model:currentPage="schForm.page" :total="total" @getList="getDeviceListHandle"></Page>
-    <el-dialog v-model="dialogEditVisible" title="编辑设备" width="500px">
+    <el-dialog v-model="dialogEditVisible" title="编辑设备" width="600px">
       <el-form ref="deviceFormRef" :model="deviceForm" :rules="deviceRules" label-width="auto">
         <el-row :gutter="20">
           <el-col :span="24">
@@ -438,8 +459,14 @@ const toLog = (row) => {
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label=设备类型 prop="deviceType">
+            <el-form-item label="设备类型" prop="deviceType">
               <el-input v-model="deviceForm.deviceType" placeholder="请输入"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="坐标" prop="latitude">
+              <p v-if="deviceForm.latitude" style="margin-right: 10px;">经纬度 {{deviceForm.longitude}}, {{deviceForm.latitude}}</p>
+              <el-button plain type="primary" @click="openMap">选择</el-button>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -456,7 +483,19 @@ const toLog = (row) => {
         </span>
       </template>
     </el-dialog>
-    <el-dialog v-model="dialogUpgradeVisible" title="升级设备" width="500px">
+    <el-dialog v-model="dialogMapVisible" title="选择坐标" fullscreen>
+      <div class="map-ct">
+        <div id="map"></div>
+        <div class="address-ct">
+          <div class="address">坐标：{{address.longitude}} {{address.latitude}}</div>
+          <div class="btn">
+            <el-button @click="dialogMapVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmMap">确定</el-button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+    <el-dialog v-model="dialogUpgradeVisible" title="升级设备" width="800px">
       <el-form ref="upgradeDeviceFormRef" :model="deviceUpgradeForm" :rules="deviceUpgradeRules" label-width="auto">
         <el-row :gutter="20">
           <el-col :span="24">
@@ -473,7 +512,7 @@ const toLog = (row) => {
         </span>
       </template>
     </el-dialog>
-    <el-dialog v-model="dialogMultiUpgradeVisible" title="批量升级设备" width="500px">
+    <el-dialog v-model="dialogMultiUpgradeVisible" title="批量升级设备" width="800px">
       <el-form ref="multiUpgradeDeviceFormRef" :model="deviceMultiUpgradeForm" :rules="deviceMultiUpgradeRules" label-width="auto">
         <el-row :gutter="20">
           <el-col :span="24">
@@ -501,4 +540,29 @@ const toLog = (row) => {
 </template>
 
 <style lang="pcss" scoped>
+.map-ct{
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 115px);
+  & #map{
+    width: 100%;
+    height: 100%;
+  }
+  & .address-ct{
+    position: absolute;
+    display: inline-block;
+    top: 20px;
+    right: 20px;
+    & .address{
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      font-size: 16px;
+      min-width: 200px;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+    & .btn{
+      text-align: right;
+    }
+  }
+}
 </style>

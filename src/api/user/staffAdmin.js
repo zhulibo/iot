@@ -10,30 +10,27 @@ export function getStaffList(params) {
 }
 
 // 新增公司管理员
-export function addStaff(data, params) {
+export function addStaff(data) {
   return axios({
     url: '/api/management/staff',
     method: 'post',
-    data,
-    params,
+    data
   })
 }
 
 // 编辑公司管理员
-export function editStaff(id, token, data) {
+export function editStaff(id, data) {
   return axios({
     url: '/api/management/staff/' + id,
     method: 'patch',
-    params: token,
     data
   })
 }
 
 // 删除公司管理员
-export function delStaff(id, params) {
+export function delStaff(id) {
   return axios({
     url: '/api/management/staff/' + id,
     method: 'delete',
-    params
   })
 }

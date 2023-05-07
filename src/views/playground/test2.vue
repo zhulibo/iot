@@ -10,7 +10,7 @@ const receiveMsg = (res) => {
 }
 
 let ws = new Socket({
-  url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/room/123`,
+  url: `/apiws/room/123`,
   onopen: () => {
     console.log('连接已打开')
   },

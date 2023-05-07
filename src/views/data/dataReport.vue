@@ -6,15 +6,12 @@ import {useUserStore} from "@/stores/user";
 import Socket from "@/utils/socket";
 
 const userStore = useUserStore()
-const userName = userStore.getUserInfo.userName
-const token = userStore.getUserInfo.token
 
 let deviceList = ref([])
 
 const getDeviceListHandle = () => {
   let data = {
-    token: token,
-    userName: userName,
+    userName: userStore.getUserInfo.userName,
     size: 999,
     page: 1,
   }
@@ -29,7 +26,7 @@ let deviceItem = ref({})
 let logList = ref([])
 
 let socket = new Socket({
-  url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/deviceLog?authorization=${token}`,
+  url: `/apiws/deviceLog?authorization=${userStore.getUserInfo.token}`,
   onmessage: (res) => {
     logList.value.push(res)
   }
@@ -44,7 +41,7 @@ const changeDevice = (item) => {
   }
   logList.value = []
   let data = {
-    userName: userName,
+    userName: userStore.getUserInfo.userName,
     oldDeviceId: deviceItem.value.id,
     newDeviceId: item.id
   }
@@ -55,7 +52,7 @@ const changeDevice = (item) => {
 
 onUnmounted(() => {
   socket.send({
-    userName: userName,
+    userName: userStore.getUserInfo.userName,
     oldDeviceId: deviceItem.value.id,
   })
   socket.destroy()

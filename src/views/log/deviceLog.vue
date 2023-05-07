@@ -6,15 +6,12 @@ import {useUserStore} from "@/stores/user";
 import {getDeviceLog} from "@/api/log/log";
 
 const userStore = useUserStore()
-const userName = userStore.getUserInfo.userName
-const token = userStore.getUserInfo.token
 
 let deviceList = ref([])
 
 const getDeviceListHandle = () => {
   let data = {
-    token: token,
-    userName: userName,
+    userName: userStore.getUserInfo.userName,
     size: 999,
     page: 1,
   }
@@ -30,7 +27,7 @@ let logList = ref([])
 const total = ref(0)
 let logForm = reactive({
   deviceId: '',
-  deviceTopic: 'INFO/data',
+  deviceTopic: '/INFO/data',
   page: 1,
   size: 10,
 })
@@ -86,12 +83,12 @@ const tabChange = () => {
       <div class="log-ct" v-loading="loading">
         <el-tabs v-model="logForm.deviceTopic" class="demo-tabs" @tab-change="tabChange">
 <!--          <el-tab-pane label="全部" name=""></el-tab-pane>-->
-          <el-tab-pane label="INFO/data" name="INFO/data" :disabled="!logForm.deviceId"></el-tab-pane>
-          <el-tab-pane label="ERROR/selftest" name="ERROR/selftest" :disabled="!logForm.deviceId"></el-tab-pane>
-          <el-tab-pane label="LOG/selflog" name="LOG/selflog" :disabled="!logForm.deviceId"></el-tab-pane>
-          <el-tab-pane label="CMD/controled" name="CMD/controled" :disabled="!logForm.deviceId"></el-tab-pane>
-          <el-tab-pane label="CMD/updated" name="CMD/updated" :disabled="!logForm.deviceId"></el-tab-pane>
-          <el-tab-pane label="CMD/control" name="CMD/control" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/INFO/data" name="/INFO/data" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/ERROR/selftest" name="/ERROR/selftest" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/LOG/selflog" name="/LOG/selflog" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/CMD/controled" name="/CMD/controled" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/CMD/updated" name="/CMD/updated" :disabled="!logForm.deviceId"></el-tab-pane>
+          <el-tab-pane label="/CMD/control" name="/CMD/control" :disabled="!logForm.deviceId"></el-tab-pane>
         </el-tabs>
         <div v-for="item in logList" :key="item.uuid" class="log-item">
           <span class="s1">{{item.timestamp}}</span>

@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from "vue";
 
-let socket = new WebSocket(`ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/room/123`)
+let socket = new WebSocket(`/apiws/room/123`)
 
 let msgList = ref([])
 

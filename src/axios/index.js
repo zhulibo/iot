@@ -14,6 +14,7 @@ axios.interceptors.request.use(
 
     const token = userStore.getUserInfo && userStore.getUserInfo.token || ''
     if (token) {
+      if(!config.params) config.params = {}
       config.params.token = token
       // config.headers.Authorization = 'Bearer ' + token
     }
@@ -31,8 +32,8 @@ axios.interceptors.response.use(
       case 0:
         return res.data
       default:
-        ElMessage.error(res.data.msg + res.data.code)
         console.log(res)
+        ElMessage.error(res.data.msg + res.data.code)
         return Promise.reject(res) // 抛出reject对象进入catch函数，避免异常数据进入then函数引起页面报错
     }
   },
@@ -59,8 +60,8 @@ axios.interceptors.response.use(
       err.message = '连接服务器失败！'
     }
 
-    ElMessage.error(err.message)
     console.log(err)
+    ElMessage.error(err.message)
     return Promise.reject(err)
   }
 )

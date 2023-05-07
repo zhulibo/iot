@@ -20,16 +20,23 @@ const emit = defineEmits([
 
 const valList = ref()
 watch(() => props.modelValue, (val) => {
-  if(!val) return
-  let list = [{
-    name: val,
-    url: val
-  }]
-  valList.value = list
+  if(val) {
+    let list = [{
+      name: val,
+      url: val
+    }]
+    valList.value = list
+  }
+  else{
+    valList.value = []
+  }
 }, {immediate: true})
 
 const handleSuccess = (res, file, fileList) => {
   emit('update:modelValue', res.data.usersInfo.file)
+}
+const handleProgress = (e, file, fileList) => {
+  console.log(e, file, fileList)
 }
 </script>
 
@@ -40,6 +47,7 @@ const handleSuccess = (res, file, fileList) => {
     action="/api/device/deviceupgrade"
     :limit="1"
     :on-success="handleSuccess"
+    :on-progress="handleProgress"
   >
     <el-button type="primary">选择文件</el-button>
     <template #tip>

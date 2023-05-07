@@ -10,12 +10,11 @@ export function getDeviceList(params) {
 }
 
 // 新增设备
-export function addDevice(data, params) {
+export function addDevice(data) {
   return axios({
     url: '/api/device/deviceinfo',
     method: 'post',
-    data,
-    params
+    data
   })
 }
 
@@ -29,31 +28,28 @@ export function editDevice(data) {
 }
 
 // 创建主题
-export function createTopic(params, data) {
+export function createTopic(data) {
   return axios({
     url: '/api/deviceHandle/iotsubdev',
     method: 'post',
-    params,
     data
   })
 }
 
 // 切换订阅设备
-export function switchSub(params, data) {
+export function switchSub(data) {
   return axios({
     url: '/api/deviceHandle/iotsubdev/subscribe',
     method: 'post',
-    params,
     data
   })
 }
 
 // 删除设备
-export function delDevice(id, params) {
+export function delDevice(id) {
   return axios({
     url: '/api/device/deviceinfo/' + id,
     method: 'delete',
-    params
   })
 }
 
@@ -78,10 +74,9 @@ export function multiUpgradeDevice(params, data) {
 }
 
 // 获取升级类型
-export function getDeviceTypeList(params) {
+export function getDeviceTypeList() {
   return axios({
     url: '/api/device/devicetypeinfo',
     method: 'get',
-    params
   })
 }

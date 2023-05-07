@@ -12,10 +12,7 @@ const userStore = useUserStore()
 
 let userDetail = reactive({})
 const getUserDetailHandle = () => {
-  let data = {
-    token: userStore.getUserInfo.token
-  }
-  getUserDetail(userStore.getUserInfo.id, data)
+  getUserDetail(userStore.getUserInfo.id)
     .then(res => {
       userDetail.email = res.data.usersInfo.email
       userDetail.fullName = res.data.usersInfo.fullName
@@ -52,10 +49,7 @@ const userInfoRules = reactive({
 const submitUserInfoForm = () => {
   userInfoFormRef.value.validate(valid => {
     if(valid) {
-      let data = {
-        token: userStore.getUserInfo.token
-      }
-      editStaff(userStore.getUserInfo.id, data, userInfoForm)
+      editStaff(userStore.getUserInfo.id, userInfoForm)
         .then(res => {
           ElMessage.success(res.msg)
           dialogInfoVisible.value = false
@@ -86,10 +80,7 @@ const phoneRules = reactive({
 const submitPhoneForm = () => {
   phoneFormRef.value.validate(valid => {
     if(valid) {
-      let data = {
-        token: userStore.getUserInfo.token
-      }
-      editStaff(userStore.getUserInfo.id, data, phoneForm)
+      editStaff(userStore.getUserInfo.id, phoneForm)
         .then(res => {
           ElMessage.success(res.msg)
           dialogPhoneVisible.value = false
@@ -144,12 +135,9 @@ const submitPasswordForm = () => {
   passwordFormRef.value.validate(valid => {
     if(valid) {
       let data = {
-        token: userStore.getUserInfo.token
-      }
-      let data2 = {
         passWord: setDataAes(passwordForm.password)
       }
-      editStaff(userStore.getUserInfo.id, data, data2)
+      editStaff(userStore.getUserInfo.id, data)
         .then(res => {
           ElMessage.success(res.msg)
           dialogPasswordVisible.value = false
@@ -167,7 +155,6 @@ const submitPasswordForm = () => {
     }
   })
 }
-
 </script>
 
 <template>

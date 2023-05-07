@@ -12,7 +12,6 @@ const route = useRoute()
 
 const schForm = reactive({
   title: route.meta.title,
-  token: userStore.getUserInfo.token,
   userName: '',
   fullName: '',
   startTime: '',
@@ -111,10 +110,7 @@ const delStaffHandle = (row) => {
     type: 'warning'
   })
     .then(() => {
-      let data = {
-        token: userStore.getUserInfo.token
-      }
-      delStaff(row.id, data)
+      delStaff(row.id)
         .then(res => {
           ElMessage.success(res.msg)
           getStaffListHandle()
@@ -176,22 +172,16 @@ const submitStaffForm = () => {
       if(staffForm.id) {
         delete staffForm.passWord
         delete staffForm.userName
-        let data = {
-          token: userStore.getUserInfo.token
-        }
-        editStaff(staffForm.id, data, staffForm)
+        editStaff(staffForm.id, staffForm)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false
             getStaffListHandle()
           })
       }else{
-        let data = {
-          token: userStore.getUserInfo.token,
-        }
         let form = deepCopy(staffForm)
         form.passWord = setDataAes(form.passWord)
-        addStaff(form, data)
+        addStaff(form)
           .then(res => {
             ElMessage.success(res.msg)
             dialogEditVisible.value = false

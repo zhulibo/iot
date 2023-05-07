@@ -22,7 +22,7 @@ export default class Socket {
       return
     }
 
-    this.socket = new WebSocket(this.options.url)
+    this.socket = new WebSocket(`ws://${location.host}${this.options.url}`)
     // 把WebSocket的回调事件赋给Socket类
     this.socket.onopen = this.onopen.bind(this)
     this.socket.onmessage = this.onmessage.bind(this)
@@ -77,7 +77,7 @@ export default class Socket {
     console.log('onerror', res)
     this.options.onerror && this.options.onerror(res)
     this.errorCount++
-    // 超多maxErrorCount，自动重连
+    // 超过maxErrorCount，自动重连
     if(this.errorCount >= this.maxErrorCount) {
       this.reconnect()
     }

@@ -7,27 +7,26 @@ import 'echarts/extension/bmap/bmap';
 import { debounce } from 'js-fragment'
 import {convertData, data} from "./components/data";
 
-const userInfo = useUserStore()
-const userName = userInfo.getUserInfo.userName
+const userStore = useUserStore()
 
-// let msgList = ref([])
-// let socket = new Socket({
-//   url: `ws://${import.meta.env.VITE_APP_SERVER_IP}:8080/home?authorization=${token}`,
-//   onmessage: (res) => {
-//     console.log(res)
-//     msgList.value.push(res)
-//   }
-// })
-// socket.send({
-//   userName: userName,
-// })
-//
-// onUnmounted(() => {
-//   socket.send({
-//     userNameClose: userName,
-//   })
-//   socket.destroy()
-// })
+let msgList = ref([])
+let socket = new Socket({
+  url: `/apiws/home?authorization=${userStore.getUserInfo.token}`,
+  onmessage: (res) => {
+    console.log(res)
+    msgList.value.push(res)
+  }
+})
+socket.send({
+  userName: userStore.getUserInfo.userName,
+})
+
+onUnmounted(() => {
+  socket.send({
+    userNameClose: userStore.getUserInfo.userName,
+  })
+  socket.destroy()
+})
 
 const chartMapOption = reactive({
   title: {
@@ -171,10 +170,12 @@ const chartMapOption = reactive({
       type: 'scatter',
       coordinateSystem: 'bmap',
       data: convertData(data),
-      symbolSize: function (val) {
-        return 14;
-        // return val[2] / 10;
+      symbolSize: function () {
+        return 14
       },
+      // symbolSize: function (val) {
+      //   return val[2] / 10;
+      // },
       encode: {
         value: 2
       },
