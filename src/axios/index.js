@@ -12,7 +12,7 @@ axios.interceptors.request.use(
 
     if(!userStore) userStore = useUserStore()
 
-    const token = userStore.getUserInfo && userStore.getUserInfo.token || ''
+    const token = userStore.getUserInfo?.token ?? ''
     if (token) {
       if(!config.params) config.params = {}
       config.params.token = token
