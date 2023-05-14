@@ -4,7 +4,11 @@ import {ElMessage} from "element-plus";
 import {getDeviceList} from "@/api/device/device";
 import {useUserStore} from "@/stores/user";
 import Socket from "@/utils/socket";
-
+import ChartMinute from "@/views/data/components/ChartMinute.vue";
+import ChartHour from "@/views/data/components/ChartHour.vue";
+import ChartDay from "@/views/data/components/ChartDay.vue";
+import {getDataReport} from "@/api/data/data";
+import {deepCopy} from "js-fragment";
 const userStore = useUserStore()
 
 let deviceList = ref([])
@@ -25,12 +29,12 @@ getDeviceListHandle()
 let deviceItem = ref({})
 let logList = ref([])
 
-let socket = new Socket({
-  url: `/apiws/deviceLog?authorization=${userStore.getUserInfo.token}`,
-  onmessage: (res) => {
-    logList.value.push(res)
-  }
-})
+// let socket = new Socket({
+//   url: `/apiws/deviceLog?authorization=${userStore.getUserInfo.token}`,
+//   onmessage: (res) => {
+//     logList.value.push(res)
+//   }
+// })
 
 const changeDevice = (item) => {
   if(item.status === 'UNACTIVE') {
@@ -40,23 +44,42 @@ const changeDevice = (item) => {
     return ElMessage.warning('该设备未订阅')
   }
   logList.value = []
-  let data = {
-    userName: userStore.getUserInfo.userName,
-    oldDeviceId: deviceItem.value.id,
-    newDeviceId: item.id
-  }
-  if(data.oldDeviceId === '') delete data.oldDeviceId
-  socket.send(data)
+  // let data = {
+  //   userName: userStore.getUserInfo.userName,
+  //   oldDeviceId: deviceItem.value.id,
+  //   newDeviceId: item.id
+  // }
+  // if(data.oldDeviceId === '') delete data.oldDeviceId
+  // socket.send(data)
   deviceItem.value = item
+  getDataReportHandle()
 }
 
-onUnmounted(() => {
-  socket.send({
+// onUnmounted(() => {
+//   socket.send({
+//     userName: userStore.getUserInfo.userName,
+//     oldDeviceId: deviceItem.value.id,
+//   })
+//   socket.destroy()
+// })
+
+const getDataReportHandle = () => {
+  getDataReport({
     userName: userStore.getUserInfo.userName,
-    oldDeviceId: deviceItem.value.id,
+    deviceId: deviceItem.value.id,
   })
-  socket.destroy()
-})
+    .then(res => {
+      let data = res.data.devicesdatainfo
+      data.forEach(item => {
+        item.values = JSON.parse(item.values)
+        item.values.CO = item.values.CO.replace(/^0+/, '')
+        item.values.CO2 = item.values.CO2.replace(/^0+/, '')
+      })
+      logList.value = data
+    })
+}
+
+
 </script>
 
 <template>
@@ -73,24 +96,18 @@ onUnmounted(() => {
       </ul>
     </div>
     <div class="log">
-      <div v-if="deviceItem.title" class="tt">
-        {{deviceItem.title}} 的运行日志
-      </div>
-      <!--      <div v-if="deviceItem.deviceId" class="tt">-->
-      <!--        {{deviceItem.deviceId}} 的运行日志-->
-      <!--      </div>-->
-      <div v-else class="tt">
-        请选择设备后查看日志
-      </div>
-      <div class="log-ct">
-        <div v-for="item in logList" :key="item.uuid" class="log-item">
-          <span class="s1">{{item.timestamp}}</span>
-          <span class="s2">CO: {{item.CO}}</span>
-          <span class="s3">CO2: {{item.CO2}}</span>
-          <span class="s4">status: {{item.STATUS}}</span>
-          <span class="s5">deviceId: {{item.deviceId}}</span>
-          <span class="s6">uuid: {{item.uuid}}</span>
+      <template v-if="deviceItem.id">
+        <div class="tt">
+          {{deviceItem.title}} 的运行日志
         </div>
+        <div class="log-ct">
+          <ChartMinute :logList="logList"></ChartMinute>
+          <ChartHour :logList="logList"></ChartHour>
+          <ChartDay :logList="logList"></ChartDay>
+        </div>
+      </template>
+      <div v-else class="tt">
+        请先选择设备
       </div>
     </div>
   </div>
@@ -113,6 +130,7 @@ onUnmounted(() => {
       background-color: #f5f5f5;
       cursor: pointer;
       &.active{
+        color: #fff;
         background-color: #308efc;
       }
     }
@@ -130,15 +148,5 @@ onUnmounted(() => {
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #f8f8f8;
-}
-.log-item{
-  margin-bottom: 10px;
-  &>span{
-    display: inline-block;
-    margin-right: 10px;
-    &.s1{
-      color: #777;
-    }
-  }
 }
 </style>

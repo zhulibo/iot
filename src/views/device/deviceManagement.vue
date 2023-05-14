@@ -400,10 +400,10 @@ const submitMultiUpgradeDeviceForm = () => {
     </div>
     <el-table ref="tableRef" :data="deviceList" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="40" />
-      <el-table-column prop="created" label="创建时间" align="center" width="250" sortable></el-table-column>
-      <el-table-column prop="id" label="设备id" min-width="260" sortable></el-table-column>
+      <el-table-column prop="created" label="创建时间" align="center" width="180" sortable></el-table-column>
+      <el-table-column prop="id" label="设备id" width="300" sortable></el-table-column>
       <el-table-column prop="title" label="名称" min-width="140" sortable></el-table-column>
-      <el-table-column prop="registerCode" label="设备序列号" min-width="140" sortable></el-table-column>
+      <el-table-column prop="registerCode" label="设备序列号" min-width="120" sortable></el-table-column>
       <el-table-column prop="deviceType" label="设备类型" min-width="140" sortable></el-table-column>
 <!--      <el-table-column prop="status" label="设备状态" min-width="140" sortable>-->
 <!--        <template #default="scope">-->
@@ -412,10 +412,14 @@ const submitMultiUpgradeDeviceForm = () => {
 <!--          <el-button v-else-if="scope.row.status === '3'" type="success" link>在线</el-button>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
-      <el-table-column prop="topicStatus" label="订阅状态" min-width="120" sortable>
+      <el-table-column prop="topicStatus" label="订阅状态" min-width="200" sortable>
         <template #default="scope">
-          <el-tag type="success" v-if="scope.row.topicStatus === 'SUBSCRIBED'">订阅</el-tag>
-          <el-tag type="info" v-else-if="scope.row.topicStatus === 'UNSUBSCRIBED'">未订阅</el-tag>
+          <el-tag type="success" v-if="scope.row.status === 'ACTIVE'">已激活</el-tag>
+          <el-tag type="info" v-else>未激活</el-tag>
+          <el-tag type="success" v-if="scope.row.topicStatus === 'SUBSCRIBED'">已订阅</el-tag>
+          <el-tag type="info" v-else>未订阅</el-tag>
+          <el-tag type="success" v-if="scope.row.onOffLineStatus === 'ONLINE'">在线</el-tag>
+          <el-tag type="info" v-else>离线</el-tag>
         </template>
       </el-table-column>
 <!--      <el-table-column prop="isSub" label="订阅状态" min-width="140" sortable>-->
@@ -429,7 +433,7 @@ const submitMultiUpgradeDeviceForm = () => {
 <!--          </el-switch>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
-      <el-table-column label="操作" align="right" width="260" fixed="right" class-name="manage-td">
+      <el-table-column label="操作" align="right" width="200" fixed="right" class-name="manage-td">
         <template #default="scope">
           <el-button type="success" link v-if="scope.row.status === 'ACTIVE'" @click="upgradeHandle(scope.row)"><icon name="add" />升级</el-button>
           <el-button type="primary" link v-if="scope.row.status === 'UNACTIVE'" @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
@@ -564,5 +568,8 @@ const submitMultiUpgradeDeviceForm = () => {
       text-align: right;
     }
   }
+}
+.el-tag + .el-tag{
+  margin-left: 10px;
 }
 </style>

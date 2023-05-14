@@ -1,11 +1,11 @@
 <script setup>
 import {useUserStore} from "@/stores/user";
-import {onMounted, onUnmounted, ref, reactive} from "vue";
+import {onUnmounted, ref, reactive} from "vue";
 import Socket from "@/utils/socket";
 import * as echarts from 'echarts';
 import 'echarts/extension/bmap/bmap';
-import { debounce } from 'js-fragment'
-import {convertData, data} from "./components/data";
+import {debounce} from 'js-fragment'
+import {getHomeDeviceInfo} from "@/api/home/home";
 
 const userStore = useUserStore()
 
@@ -31,137 +31,52 @@ onUnmounted(() => {
 const chartMapOption = reactive({
   title: {
     text: '环境监测平台',
-    subtext: '副标题',
-    sublink: 'http://www.pm25.in',
     left: 'center'
   },
   tooltip: {
     trigger: 'item',
     formatter: function (params) {
-      return params.name + '<br/>' +
-        'co: ' + params.data.value[2] + '<br/>' +
-        'co2: ' + params.data.value2[2];
+      let data = {}
+      if(params.data.value[2]) {
+        data = params.data.value[2]
+      }
+      let msg = params.name + '<br/>'
+      // eslint-disable-next-line no-prototype-builtins
+      if(data.hasOwnProperty('CO')) {
+        msg += 'CO:' + data.CO.replace(/^0+/, '') + '<br/>'
+      }
+      // eslint-disable-next-line no-prototype-builtins
+      if(data.hasOwnProperty('CO2')) {
+        msg += 'CO2:' + data.CO2.replace(/^0+/, '') + '<br/>'
+      }
+      return msg
     }
   },
   bmap: {
-    center: [110, 35],
-    zoom: 5.5,
+    center: [110, 34],
+    zoom: 6.8,
     roam: true,
     mapStyle: {
-      styleJson: [
-        {
-          featureType: 'water',
-          elementType: 'all',
+      styleJson:
+        [{
+          featureType: "road",
+          elementType: "labels",
           stylers: {
-            color: '#d1d1d1'
+            visibility: "off"
           }
-        },
-        {
-          featureType: 'land',
-          elementType: 'all',
+        }, {
+          featureType: "road",
+          elementType: "geometry.fill",
           stylers: {
-            color: '#f3f3f3'
+            opacity: "4f"
           }
-        },
-        {
-          featureType: 'railway',
-          elementType: 'all',
+        }, {
+          featureType: "road",
+          elementType: "geometry.stroke",
           stylers: {
-            visibility: 'off'
+            opacity: "4f"
           }
-        },
-        {
-          featureType: 'highway',
-          elementType: 'all',
-          stylers: {
-            color: '#fdfdfd'
-          }
-        },
-        {
-          featureType: 'highway',
-          elementType: 'labels',
-          stylers: {
-            visibility: 'off'
-          }
-        },
-        {
-          featureType: 'arterial',
-          elementType: 'geometry',
-          stylers: {
-            color: '#fefefe'
-          }
-        },
-        {
-          featureType: 'arterial',
-          elementType: 'geometry.fill',
-          stylers: {
-            color: '#fefefe'
-          }
-        },
-        {
-          featureType: 'poi',
-          elementType: 'all',
-          stylers: {
-            visibility: 'off'
-          }
-        },
-        {
-          featureType: 'green',
-          elementType: 'all',
-          stylers: {
-            visibility: 'off'
-          }
-        },
-        {
-          featureType: 'subway',
-          elementType: 'all',
-          stylers: {
-            visibility: 'off'
-          }
-        },
-        {
-          featureType: 'manmade',
-          elementType: 'all',
-          stylers: {
-            color: '#d1d1d1'
-          }
-        },
-        {
-          featureType: 'local',
-          elementType: 'all',
-          stylers: {
-            color: '#d1d1d1'
-          }
-        },
-        {
-          featureType: 'arterial',
-          elementType: 'labels',
-          stylers: {
-            visibility: 'off'
-          }
-        },
-        {
-          featureType: 'boundary',
-          elementType: 'all',
-          stylers: {
-            color: '#fefefe'
-          }
-        },
-        {
-          featureType: 'building',
-          elementType: 'all',
-          stylers: {
-            color: '#d1d1d1'
-          }
-        },
-        {
-          featureType: 'label',
-          elementType: 'labels.text.fill',
-          stylers: {
-            color: '#999999'
-          }
-        }
-      ]
+        }]
     }
   },
   series: [
@@ -169,9 +84,9 @@ const chartMapOption = reactive({
       name: '设备数据',
       type: 'scatter',
       coordinateSystem: 'bmap',
-      data: convertData(data),
+      data: [],
       symbolSize: function () {
-        return 14
+        return 12
       },
       // symbolSize: function (val) {
       //   return val[2] / 10;
@@ -185,8 +100,8 @@ const chartMapOption = reactive({
         show: true
       },
       itemStyle: {
-        color: '#2a8dff',
-        shadowBlur: 10,
+        color: '#1fec4a',
+        shadowBlur: 6,
         shadowColor: '#666'
       },
       emphasis: {
@@ -198,18 +113,11 @@ const chartMapOption = reactive({
   ]
 })
 let chartMap
-let debounceLine
-
-onMounted(() => {
-  debounceLine = debounce(() => {
-    if(chartMap){
-      chartMap.resize()
-    }
-  }, 200)
-  setTimeout(() => {
-    initChartLine()
-  }, 200)
-})
+let debounceLine = debounce(() => {
+  if (chartMap) {
+    chartMap.resize()
+  }
+}, 200)
 
 // 初始化图表
 const initChartLine = () => {
@@ -219,6 +127,29 @@ const initChartLine = () => {
   }
   chartMap.setOption(chartMapOption)
 }
+
+const deviceInfo = ref({})
+getHomeDeviceInfo({userName: userStore.getUserInfo.userName})
+  .then(res => {
+    const {devicesinfo, devicesdatainfo} = res.data
+    deviceInfo.value = res.data
+    let data = devicesinfo.map(item => {
+      return {
+        id: item.id,
+        name: item.title,
+        value: [item.longitude, item.latitude],
+      }
+    })
+    data.forEach(item => {
+      devicesdatainfo.forEach(item2 => {
+        if (item.id === item2.deviceId) {
+          item.value.push(JSON.parse(item2.values))
+        }
+      })
+    })
+    chartMapOption.series[0].data = data
+    initChartLine()
+  })
 </script>
 
 <template>
@@ -227,7 +158,7 @@ const initChartLine = () => {
   </div>
 </template>
 <style lang="pcss" scoped>
-#chart-map{
+#chart-map {
   width: 100%;
   height: calc(100vh - 103px);
 }

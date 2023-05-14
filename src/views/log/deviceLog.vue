@@ -41,6 +41,8 @@ const changeDevice = (item) => {
   }
   logForm.title = item.title
   logForm.deviceId = item.id
+  logForm.page = 1
+  logForm.logForm = '/INFO/data'
   getDeviceLogHandle()
 }
 const getDeviceLogHandle = () => {
