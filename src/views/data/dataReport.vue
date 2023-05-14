@@ -1,5 +1,5 @@
 <script setup>
-import {onUnmounted, ref} from "vue";
+import {ref, onUnmounted} from "vue";
 import {ElMessage} from "element-plus";
 import {getDeviceList} from "@/api/device/device";
 import {useUserStore} from "@/stores/user";
@@ -8,7 +8,6 @@ import ChartMinute from "@/views/data/components/ChartMinute.vue";
 import ChartHour from "@/views/data/components/ChartHour.vue";
 import ChartDay from "@/views/data/components/ChartDay.vue";
 import {getDataReport} from "@/api/data/data";
-import {deepCopy} from "js-fragment";
 const userStore = useUserStore()
 
 let deviceList = ref([])
@@ -29,12 +28,19 @@ getDeviceListHandle()
 let deviceItem = ref({})
 let logList = ref([])
 
-// let socket = new Socket({
-//   url: `/apiws/deviceLog?authorization=${userStore.getUserInfo.token}`,
-//   onmessage: (res) => {
-//     logList.value.push(res)
-//   }
-// })
+let socket = new Socket({
+  url: `/apiws/deviceLog?authorization=${userStore.getUserInfo.token}`,
+  onmessage: (res) => {
+    res.CO = res.CO.replace(/^0+/, '')
+    res.CO2 = res.CO2.replace(/^0+/, '')
+    let data = {
+      timestamp: res.timestamp,
+      values: res
+    }
+    logList.value.push(data)
+    logList.value.shift()
+  }
+})
 
 const changeDevice = (item) => {
   if(item.status === 'UNACTIVE') {
@@ -44,24 +50,24 @@ const changeDevice = (item) => {
     return ElMessage.warning('该设备未订阅')
   }
   logList.value = []
-  // let data = {
-  //   userName: userStore.getUserInfo.userName,
-  //   oldDeviceId: deviceItem.value.id,
-  //   newDeviceId: item.id
-  // }
-  // if(data.oldDeviceId === '') delete data.oldDeviceId
-  // socket.send(data)
+  let data = {
+    userName: userStore.getUserInfo.userName,
+    oldDeviceId: deviceItem.value.id,
+    newDeviceId: item.id
+  }
+  if(data.oldDeviceId === '') delete data.oldDeviceId
+  socket.send(data)
   deviceItem.value = item
   getDataReportHandle()
 }
 
-// onUnmounted(() => {
-//   socket.send({
-//     userName: userStore.getUserInfo.userName,
-//     oldDeviceId: deviceItem.value.id,
-//   })
-//   socket.destroy()
-// })
+onUnmounted(() => {
+  socket.send({
+    userName: userStore.getUserInfo.userName,
+    oldDeviceId: deviceItem.value.id,
+  })
+  socket.destroy()
+})
 
 const getDataReportHandle = () => {
   getDataReport({
@@ -75,6 +81,7 @@ const getDataReportHandle = () => {
         item.values.CO = item.values.CO.replace(/^0+/, '')
         item.values.CO2 = item.values.CO2.replace(/^0+/, '')
       })
+      data.reverse()
       logList.value = data
     })
 }

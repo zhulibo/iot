@@ -72,14 +72,14 @@ onMounted(() => {
 })
 
 watch(() => props.logList, logList => {
+  chartOption.xAxis.data = []
+  chartOption.series[0].data = []
+  chartOption.series[1].data = []
   logList.forEach(item => {
     chartOption.xAxis.data.push(item.timestamp)
     chartOption.series[0].data.push(item.values.CO)
     chartOption.series[1].data.push(item.values.CO2)
   })
-  chartOption.xAxis.data.splice(0, chartOption.xAxis.data.length - 14)
-  chartOption.series[0].data.splice(0, chartOption.series[0].data.length - 14)
-  chartOption.series[1].data.splice(0, chartOption.series[1].data.length - 14)
   initChartLine()
 }, {deep: true})
 
