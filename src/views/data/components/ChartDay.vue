@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import {onMounted, reactive, watch} from "vue";
-import * as echarts from 'echarts';
-import {debounce} from 'js-fragment';
+import {reactive, watch} from "vue";
+import {useEcharts} from '@/hooks/useEcharts'
 
 const props = defineProps({
   logList: {
@@ -9,6 +8,7 @@ const props = defineProps({
     required: true
   }
 })
+const {initChart, setOption} = useEcharts()
 
 const chartOption = reactive({
   title: {
@@ -62,16 +62,6 @@ const chartOption = reactive({
     }
   ]
 })
-let chart = null
-let chartDebounce = null
-
-onMounted(() => {
-  chartDebounce = debounce(() => {
-    if(chart){
-      chart.resize()
-    }
-  }, 200)
-})
 
 watch(() => props.logList, logList => {
   logList.forEach(item => {
@@ -82,17 +72,10 @@ watch(() => props.logList, logList => {
   chartOption.xAxis.data.splice(0, chartOption.xAxis.data.length - 14)
   chartOption.series[0].data.splice(0, chartOption.series[0].data.length - 14)
   chartOption.series[1].data.splice(0, chartOption.series[1].data.length - 14)
-  initChartLine()
+  initChart('chart-day')
+  setOption(chartOption)
 }, {deep: true})
 
-// 初始化图表
-const initChartLine = () => {
-  if (!chart) {
-    chart = echarts.init(document.getElementById('chart-day'))
-    window.addEventListener('resize', chartDebounce)
-  }
-  chart.setOption(chartOption)
-}
 </script>
 
 <template>
