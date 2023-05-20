@@ -1,12 +1,17 @@
 <script setup>
-import {ref} from "vue";
+
+// 引入element-plus图标
+import {
+  Delete,
+} from '@element-plus/icons-vue'
+import { ref } from "vue";
 import {
   createTopic,
   delDevice,
   switchSub,
 } from "@/api/device/device";
-import {ElMessage, ElMessageBox, ElTable} from "element-plus";
-import {useUserStore} from "@/stores/user";
+import { ElMessage, ElMessageBox, ElTable } from "element-plus";
+import { useUserStore } from "@/stores/user";
 import Uploader from "@/components/uploader/Uploader.vue";
 import {
   loading,
@@ -53,6 +58,43 @@ const userStore = useUserStore()
 
 // 获取设备列表
 getDeviceListHandle()
+
+// 获得输入的城市
+let inputCity = ref('')
+const searchCitys = () => {
+  const map = new BMap.Map("map");
+  // 设置地图可缩放
+  map.enableScrollWheelZoom(true)
+  const point = new BMap.Point(116.331398, 39.897445);
+  map.centerAndZoom(point, 12);
+  // 创建地址解析器实例
+  const myGeo = new BMap.Geocoder();
+  // 将地址解析结果显示在地图上,并调整地图视野
+  myGeo.getPoint(inputCity.value, function (point) {
+    if (point) {
+      map.centerAndZoom(point, 16);
+      map.addOverlay(new BMap.Marker(point));
+    } else {
+      alert("您选择地址没有解析到结果!");
+    }
+    // 地址为空的话默认就是搜索北京市
+  }, point);
+  address.latitude = ""
+  address.longitude = ""
+  map.addEventListener("click", function (e) {
+    console.log("我被点击了");
+    map.clearOverlays()
+    let pt = e.point
+    let marker = new BMap.Marker(new BMap.Point(pt.lng, pt.lat))
+    map.addOverlay(marker)
+    let geoc = new BMap.Geocoder()
+    geoc.getLocation(pt, function () {
+      address.latitude = pt.lat
+      address.longitude = pt.lng
+    })
+  })
+
+}
 
 // 删除设备
 const delDeviceHandle = (row) => {
@@ -142,10 +184,12 @@ const switchSubHandle = (row) => {
             <el-input v-model="schForm.title" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
           <el-form-item label="创建时间" prop="startTime">
-            <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起" style="width: 200px;" @change="getListHandle"></el-date-picker>
+            <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起"
+              style="width: 200px;" @change="getListHandle"></el-date-picker>
           </el-form-item>
           <el-form-item label="" prop="endTime">
-            <el-date-picker v-model="schForm.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="至" style="width: 200px;" @change="getListHandle"></el-date-picker>
+            <el-date-picker v-model="schForm.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="至"
+              style="width: 200px;" @change="getListHandle"></el-date-picker>
           </el-form-item>
           <el-form-item label="设备状态" prop="status">
             <el-radio-group v-model="schForm.status" @change="getListHandle">
@@ -169,8 +213,12 @@ const switchSubHandle = (row) => {
         </el-form>
       </div>
       <div class="new-item">
-        <el-button type="success" @click="multiUpgradeHandle"><icon name="add" />批量升级</el-button>
-        <el-button type="primary" @click="addDeviceHandle"><icon name="add" />新增</el-button>
+        <el-button type="success" @click="multiUpgradeHandle">
+          <icon name="add" />批量升级
+        </el-button>
+        <el-button type="primary" @click="addDeviceHandle">
+          <icon name="add" />新增
+        </el-button>
       </div>
     </div>
     <!-- table -->
@@ -193,17 +241,32 @@ const switchSubHandle = (row) => {
       </el-table-column>
       <el-table-column label="操作" align="right" width="200" fixed="right" class-name="manage-td">
         <template #default="scope">
-          <el-button type="success" link v-if="scope.row.status === 'ACTIVE'" @click="upgradeHandle(scope.row)"><icon name="add" />升级</el-button>
-          <el-button type="primary" link v-if="scope.row.status === 'UNACTIVE'" @click="createTopicHandle(scope.row)"><icon name="edit" />激活</el-button>
-          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'UNSUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />订阅</el-button>
-          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'SUBSCRIBED'" @click="switchSubHandle(scope.row)"><icon name="edit" />退订</el-button>
-          <el-button type="warning" link @click="delDeviceHandle(scope.row)"><icon name="del" />删除</el-button>
+          <el-button type="success" link v-if="scope.row.status === 'ACTIVE'" @click="upgradeHandle(scope.row)">
+            <icon name="add" />升级
+          </el-button>
+          <el-button type="primary" link v-if="scope.row.status === 'UNACTIVE'" @click="createTopicHandle(scope.row)">
+            <icon name="edit" />激活
+          </el-button>
+          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'UNSUBSCRIBED'"
+            @click="switchSubHandle(scope.row)">
+            <icon name="edit" />订阅
+          </el-button>
+          <el-button type="primary" link v-if="scope.row.status === 'ACTIVE' && scope.row.topicStatus === 'SUBSCRIBED'"
+            @click="switchSubHandle(scope.row)">
+            <icon name="edit" />退订
+          </el-button>
+          <el-button type="warning" link @click="delDeviceHandle(scope.row)">
+            <icon name="del" />删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
     <!-- 多选 -->
     <div style="margin-top: 10px">
-      <el-button type="danger" plain style="margin-left: 10px;" @click="multiDel" :disabled="multipleSelection.length === 0"><icon name="del" />删除</el-button>
+      <el-button type="danger" plain style="margin-left: 10px;" @click="multiDel"
+        :disabled="multipleSelection.length === 0">
+        <icon name="del" />删除
+      </el-button>
     </div>
     <!-- 分页 -->
     <Page v-model:currentPage="schForm.page" :total="total" @getList="getDeviceListHandle"></Page>
@@ -228,13 +291,15 @@ const switchSubHandle = (row) => {
           </el-col>
           <el-col :span="24">
             <el-form-item label="坐标" prop="latitude">
-              <p v-if="deviceForm.latitude" style="margin-right: 10px;">经纬度 {{deviceForm.longitude}}, {{deviceForm.latitude}}</p>
+              <p v-if="deviceForm.latitude" style="margin-right: 10px;">经纬度 {{ deviceForm.longitude }},
+                {{ deviceForm.latitude }}</p>
               <el-button plain type="primary" @click="openMap">选择</el-button>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="描述" prop="description">
-              <el-input v-model="deviceForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 5}" placeholder="请输入" />
+              <el-input v-model="deviceForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }"
+                placeholder="请输入" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -246,12 +311,19 @@ const switchSubHandle = (row) => {
         </span>
       </template>
     </el-dialog>
+
+
     <!-- 选择坐标 -->
     <el-dialog v-model="dialogMapVisible" title="选择坐标" fullscreen>
+      <!-- 添加新代码的地方 -->
+      <el-input v-model="inputCity" placeholder="请输入您要寻找的城市" class="searchCity" />
+      <el-button type="danger" :icon="Delete" circle size="small" @click="inputCity = ''" />
+      <el-button type="primary" size="large" @click="searchCitys">搜索</el-button>
+
       <div class="map-ct">
         <div id="map"></div>
         <div class="address-ct">
-          <div class="address">坐标：{{address.longitude}} {{address.latitude}}</div>
+          <div class="address">坐标：{{ address.longitude }} {{ address.latitude }}</div>
           <div class="btn">
             <el-button @click="dialogMapVisible = false">取消</el-button>
             <el-button type="primary" @click="confirmMap">确定</el-button>
@@ -259,6 +331,7 @@ const switchSubHandle = (row) => {
         </div>
       </div>
     </el-dialog>
+
     <!-- 升级设备 -->
     <el-dialog v-model="dialogUpgradeVisible" title="升级设备" width="800px">
       <el-form ref="upgradeDeviceFormRef" :model="deviceUpgradeForm" :rules="deviceUpgradeRules" label-width="auto">
@@ -279,7 +352,8 @@ const switchSubHandle = (row) => {
     </el-dialog>
     <!-- 批量升级设备 -->
     <el-dialog v-model="dialogMultiUpgradeVisible" title="批量升级设备" width="800px">
-      <el-form ref="multiUpgradeDeviceFormRef" :model="deviceMultiUpgradeForm" :rules="deviceMultiUpgradeRules" label-width="auto">
+      <el-form ref="multiUpgradeDeviceFormRef" :model="deviceMultiUpgradeForm" :rules="deviceMultiUpgradeRules"
+        label-width="auto">
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="设备类型" prop="deviceMultiUpgradeType">
@@ -306,6 +380,14 @@ const switchSubHandle = (row) => {
 </template>
 
 <style lang="pcss" scoped>
+
+.el-dialog__body{
+  padding:0px;
+  padding:0px
+}
+.searchCity{
+  width:300px
+}
 .map-ct{
   position: relative;
   width: 100%;
@@ -333,5 +415,8 @@ const switchSubHandle = (row) => {
 }
 .el-tag + .el-tag{
   margin-left: 10px;
+}
+.el-button--danger{
+  margin-left:10px
 }
 </style>
