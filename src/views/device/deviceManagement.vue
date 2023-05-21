@@ -1,9 +1,7 @@
 <script setup>
 
 // 引入element-plus图标
-import {
-  Delete,
-} from '@element-plus/icons-vue'
+
 import { ref } from "vue";
 import {
   createTopic,
@@ -72,6 +70,9 @@ const searchCitys = () => {
   // 将地址解析结果显示在地图上,并调整地图视野
   myGeo.getPoint(inputCity.value, function (point) {
     if (point) {
+      console.log(point);
+      address.latitude = point.lat
+      address.longitude = point.lng
       map.centerAndZoom(point, 16);
       map.addOverlay(new BMap.Marker(point));
     } else {
@@ -79,8 +80,7 @@ const searchCitys = () => {
     }
     // 地址为空的话默认就是搜索北京市
   }, point);
-  address.latitude = ""
-  address.longitude = ""
+
   map.addEventListener("click", function (e) {
     console.log("我被点击了");
     map.clearOverlays()
@@ -315,12 +315,14 @@ const switchSubHandle = (row) => {
 
     <!-- 选择坐标 -->
     <el-dialog v-model="dialogMapVisible" title="选择坐标" fullscreen>
-      <!-- 添加新代码的地方 -->
-      <el-input v-model="inputCity" placeholder="请输入您要寻找的城市" class="searchCity" />
-      <el-button type="danger" :icon="Delete" circle size="small" @click="inputCity = ''" />
-      <el-button type="primary" size="large" @click="searchCitys">搜索</el-button>
-
+    
       <div class="map-ct">
+          <!-- 添加新代码的地方  地图搜索框 -->
+      <div class="search">
+        <el-input v-model="inputCity" placeholder="请输入您要寻找的城市" class="searchCity" clearable/>
+     
+      <el-button type="primary" class=""  @click="searchCitys">搜索</el-button>
+      </div>
         <div id="map"></div>
         <div class="address-ct">
           <div class="address">坐标：{{ address.longitude }} {{ address.latitude }}</div>
@@ -386,7 +388,9 @@ const switchSubHandle = (row) => {
   padding:0px
 }
 .searchCity{
-  width:300px
+  
+  width:300px;
+  margin-right:20px
 }
 .map-ct{
   position: relative;
@@ -396,11 +400,23 @@ const switchSubHandle = (row) => {
     width: 100%;
     height: 100%;
   }
+   & .search{
+    position: absolute;
+    display: inline-block;
+    top: 20px;
+   left: 20px;
+   /* 图层放到地图上面 */
+   z-index:10;
+   opacity:0.8
+
+  }
   & .address-ct{
     position: absolute;
     display: inline-block;
     top: 20px;
     right: 20px;
+      /* 图层放到地图上面 */
+   z-index:10;
     & .address{
       margin-bottom: 10px;
       padding: 5px 10px;
