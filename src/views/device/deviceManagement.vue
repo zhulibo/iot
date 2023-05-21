@@ -8,7 +8,7 @@ import {
   delDevice,
   switchSub,
 } from "@/api/device/device";
-import { ElMessage, ElMessageBox, ElTable } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useUserStore } from "@/stores/user";
 import Uploader from "@/components/uploader/Uploader.vue";
 import {
@@ -46,6 +46,8 @@ import {
   dialogMapVisible,
   address,
   openMap,
+  inputCity,
+  searchCitys,
   confirmMap,
   deviceForm,
   deviceRules,
@@ -56,45 +58,6 @@ const userStore = useUserStore()
 
 // 获取设备列表
 getDeviceListHandle()
-
-// 获得输入的城市
-let inputCity = ref('')
-const searchCitys = () => {
-  const map = new BMap.Map("map");
-  // 设置地图可缩放
-  map.enableScrollWheelZoom(true)
-  const point = new BMap.Point(116.331398, 39.897445);
-  map.centerAndZoom(point, 12);
-  // 创建地址解析器实例
-  const myGeo = new BMap.Geocoder();
-  // 将地址解析结果显示在地图上,并调整地图视野
-  myGeo.getPoint(inputCity.value, function (point) {
-    if (point) {
-      console.log(point);
-      address.latitude = point.lat
-      address.longitude = point.lng
-      map.centerAndZoom(point, 16);
-      map.addOverlay(new BMap.Marker(point));
-    } else {
-      alert("您选择地址没有解析到结果!");
-    }
-    // 地址为空的话默认就是搜索北京市
-  }, point);
-
-  map.addEventListener("click", function (e) {
-    console.log("我被点击了");
-    map.clearOverlays()
-    let pt = e.point
-    let marker = new BMap.Marker(new BMap.Point(pt.lng, pt.lat))
-    map.addOverlay(marker)
-    let geoc = new BMap.Geocoder()
-    geoc.getLocation(pt, function () {
-      address.latitude = pt.lat
-      address.longitude = pt.lng
-    })
-  })
-
-}
 
 // 删除设备
 const delDeviceHandle = (row) => {
@@ -183,27 +146,38 @@ const switchSubHandle = (row) => {
           <el-form-item label="设备名称" prop="title">
             <el-input v-model="schForm.title" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
-          <el-form-item label="创建时间" prop="startTime">
-            <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起"
-              style="width: 200px;" @change="getListHandle"></el-date-picker>
-          </el-form-item>
-          <el-form-item label="" prop="endTime">
-            <el-date-picker v-model="schForm.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="至"
-              style="width: 200px;" @change="getListHandle"></el-date-picker>
+<!--          <el-form-item label="创建时间" prop="startTime">-->
+<!--            <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起"-->
+<!--              style="width: 200px;" @change="getListHandle"></el-date-picker>-->
+<!--          </el-form-item>-->
+<!--          <el-form-item label="" prop="endTime">-->
+<!--            <el-date-picker v-model="schForm.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="至"-->
+<!--              style="width: 200px;" @change="getListHandle"></el-date-picker>-->
+<!--          </el-form-item>-->
+          <el-form-item label="设备类型" prop="deviceType">
+            <el-select v-model="schForm.deviceType">
+              <el-option v-for="item in deviceTypeList" :label="item" :key="item" :value="item"></el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="设备状态" prop="status">
             <el-radio-group v-model="schForm.status" @change="getListHandle">
               <el-radio-button label="">全部</el-radio-button>
-              <el-radio-button :label="0">未激活</el-radio-button>
-              <el-radio-button :label="1">离线</el-radio-button>
-              <el-radio-button :label="2">在线</el-radio-button>
+              <el-radio-button label="ACTIVE">已激活</el-radio-button>
+              <el-radio-button label="UNACTIVE">未激活</el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="订阅状态" prop="isSub">
-            <el-radio-group v-model="schForm.isSub" @change="getListHandle">
+          <el-form-item label="订阅状态" prop="topicStatus">
+            <el-radio-group v-model="schForm.topicStatus" @change="getListHandle">
               <el-radio-button label="">全部</el-radio-button>
-              <el-radio-button :label="0">已订阅</el-radio-button>
-              <el-radio-button :label="1">未订阅</el-radio-button>
+              <el-radio-button label="SUBSCRIBED">已订阅</el-radio-button>
+              <el-radio-button label="UNSUBSCRIBED">未订阅</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="是否在线" prop="onOffLineStatus">
+            <el-radio-group v-model="schForm.onOffLineStatus" @change="getListHandle">
+              <el-radio-button label="">全部</el-radio-button>
+              <el-radio-button label="ONLINE">在线</el-radio-button>
+              <el-radio-button label="OFFLINE">离线</el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item>
@@ -280,11 +254,6 @@ const switchSubHandle = (row) => {
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="设备序列号" prop="registerCode">
-              <el-input v-model="deviceForm.registerCode" placeholder="请输入"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
             <el-form-item label="设备类型" prop="deviceType">
               <el-input v-model="deviceForm.deviceType" placeholder="请输入"></el-input>
             </el-form-item>
@@ -311,18 +280,13 @@ const switchSubHandle = (row) => {
         </span>
       </template>
     </el-dialog>
-
-
     <!-- 选择坐标 -->
     <el-dialog v-model="dialogMapVisible" title="选择坐标" fullscreen>
-    
       <div class="map-ct">
-          <!-- 添加新代码的地方  地图搜索框 -->
-      <div class="search">
-        <el-input v-model="inputCity" placeholder="请输入您要寻找的城市" class="searchCity" clearable/>
-     
-      <el-button type="primary" class=""  @click="searchCitys">搜索</el-button>
-      </div>
+        <div class="search">
+          <el-input v-model="inputCity" placeholder="请输入您要寻找的地址" class="searchCity" clearable/>
+          <el-button type="primary" @click="searchCitys">搜索</el-button>
+        </div>
         <div id="map"></div>
         <div class="address-ct">
           <div class="address">坐标：{{ address.longitude }} {{ address.latitude }}</div>
@@ -333,7 +297,6 @@ const switchSubHandle = (row) => {
         </div>
       </div>
     </el-dialog>
-
     <!-- 升级设备 -->
     <el-dialog v-model="dialogUpgradeVisible" title="升级设备" width="800px">
       <el-form ref="upgradeDeviceFormRef" :model="deviceUpgradeForm" :rules="deviceUpgradeRules" label-width="auto">
@@ -382,16 +345,6 @@ const switchSubHandle = (row) => {
 </template>
 
 <style lang="pcss" scoped>
-
-.el-dialog__body{
-  padding:0px;
-  padding:0px
-}
-.searchCity{
-  
-  width:300px;
-  margin-right:20px
-}
 .map-ct{
   position: relative;
   width: 100%;
@@ -400,23 +353,24 @@ const switchSubHandle = (row) => {
     width: 100%;
     height: 100%;
   }
-   & .search{
+  & .search{
     position: absolute;
     display: inline-block;
     top: 20px;
-   left: 20px;
-   /* 图层放到地图上面 */
-   z-index:10;
-   opacity:0.8
-
+    left: 20px;
+    z-index: 10;
+    opacity: 0.8;
+    & .searchCity{
+      width: 300px;
+      margin-right: 10px
+    }
   }
   & .address-ct{
     position: absolute;
     display: inline-block;
     top: 20px;
     right: 20px;
-      /* 图层放到地图上面 */
-   z-index:10;
+    z-index: 10;
     & .address{
       margin-bottom: 10px;
       padding: 5px 10px;

@@ -12,10 +12,12 @@ export const tableRef = ref()
 export const schForm = reactive({
   userName: userStore.getUserInfo.userName,
   title: '',
-  startTime: '',
-  endTime: '',
+  deviceType: '',
+  // startTime: '',
+  // endTime: '',
   status: '',
-  isSub: '',
+  topicStatus: '',
+  onOffLineStatus: '',
   page: 1,
   size: 10,
 })

@@ -21,29 +21,46 @@ export let address = reactive({
   longitude: '',
 })
 
+let map
+let myGeo
 // 打开地图
 export const openMap = async() => {
+  address.latitude = ''
+  address.longitude = ''
   dialogMapVisible.value = true
   await nextTick()
-  //实例化地图
-  // eslint-disable-next-line no-undef
-  let map = new BMap.Map('map')
-  // eslint-disable-next-line no-undef
+  map = new BMap.Map("map")
+  myGeo = new BMap.Geocoder()
   map.centerAndZoom(new BMap.Point(110,35), 6)
   map.enableScrollWheelZoom(true)
-  // eslint-disable-next-line no-undef
-  let geoc = new BMap.Geocoder()
   map.addEventListener('click', function(e){
     map.clearOverlays()
     let pt = e.point
     // eslint-disable-next-line no-undef
     let marker = new BMap.Marker(new BMap.Point(pt.lng, pt.lat))
     map.addOverlay(marker)
-    geoc.getLocation(pt, function(){
+    myGeo.getLocation(pt, function(){
       address.latitude = pt.lat
       address.longitude = pt.lng
     })
   })
+}
+
+// 获得输入的城市
+export let inputCity = ref('')
+export const searchCitys = () => {
+  // 将地址解析结果显示在地图上,并调整地图视野
+  console.log(inputCity.value)
+  myGeo.getPoint(inputCity.value, function (point) {
+    if(point) {
+      address.latitude = point.lat
+      address.longitude = point.lng
+      map.centerAndZoom(point, 12)
+      map.addOverlay(new BMap.Marker(point))
+    } else {
+      ElMessage.warning("您选择地址没有解析到结果!")
+    }
+  }, map)
 }
 
 // 保存地图坐标
@@ -72,7 +89,6 @@ const resetDeviceForm = () => {
 
 export const deviceForm = reactive({
   title: '',
-  registerCode: '',
   deviceType: '',
   latitude: '',
   longitude: '',
@@ -82,7 +98,6 @@ export const deviceForm = reactive({
 
 export const deviceRules = reactive({
   title: [{ required: true, message: '请输入', trigger: 'blur' }],
-  registerCode: [{ required: true, message: '请输入', trigger: 'blur' }],
   deviceType: [{ required: true, message: '请输入', trigger: 'blur' }],
   latitude: [{ required: true, message: '请选择', trigger: 'blur' }],
   longitude: [{ required: true, message: '请选择', trigger: 'blur' }],

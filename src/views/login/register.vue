@@ -64,10 +64,10 @@ const goToLogin = () => {
         <h3>新用户注册</h3>
       </div>
       <el-form ref="registerFormRef" :model="registerForm" :rules="registerRule">
-        <el-form-item prop="account">
+        <el-form-item prop="userName">
           <el-input v-model="registerForm.userName" placeholder="用户名" @keyup.enter="submitLoginForm"></el-input>
         </el-form-item>
-        <el-form-item prop="account">
+        <el-form-item prop="phone">
           <el-input v-model="registerForm.phone" placeholder="手机号" @keyup.enter="submitLoginForm"></el-input>
         </el-form-item>
         <el-form-item prop="password">
