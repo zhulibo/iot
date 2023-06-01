@@ -8,16 +8,17 @@ import {getDeviceLog} from "@/api/log/log";
 const userStore = useUserStore()
 
 let deviceList = ref([])
-
+const totalDevice = ref(0)
+let schForm = reactive({
+  userName: userStore.getUserInfo.userName,
+  page: 1,
+  size: 10,
+})
 const getDeviceListHandle = () => {
-  let data = {
-    userName: userStore.getUserInfo.userName,
-    size: 999,
-    page: 1,
-  }
-  getDeviceList(data)
+  getDeviceList(schForm)
     .then(res => {
       deviceList.value = res.results
+      totalDevice.value = res.count
     })
 }
 getDeviceListHandle()
@@ -49,8 +50,8 @@ const getDeviceLogHandle = () => {
   loading.value = true
   getDeviceLog(logForm)
     .then(res => {
-      total.value = res.count
       logList.value = res.results
+      total.value = res.count
     })
     .finally(() => {
       loading.value = false
@@ -74,6 +75,8 @@ const tabChange = () => {
           <el-button v-else-if="item.topicStatus === 'SUBSCRIBED'" type="success" link>已订阅</el-button>
         </li>
       </ul>
+      <!-- 分页 -->
+      <el-pagination small layout="prev, pager, next" v-model:currentPage="schForm.page" :total="totalDevice"  @current-change="getDeviceListHandle"/>
     </div>
     <div class="log">
       <div v-if="logForm.title" class="tt">

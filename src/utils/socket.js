@@ -15,6 +15,8 @@ export default class Socket {
   heartbeatInterval = 10000 // 心跳发送间隔
   maxErrorCount = 5 // 最大onerror连续发生的次数
   errorCount = 0 // onerror连续发生的次数
+  maxResendCount = 3 // 最大重发次数
+  resendCount = 0 // 连续发生的重发次数
 
   init() {
 
@@ -53,19 +55,30 @@ export default class Socket {
   send(data, cb) {
     // OPEN状态直接发送
     if(this.socket.readyState === this.socket.OPEN) {
+      this.resendCount = 0
       this.socket.send(JSON.stringify(data))
       // 回调
       if(cb) cb()
     }
     // CONNECTING
     else if(this.socket.readyState === this.socket.CONNECTING) {
+      if(this.resendCount >= this.maxResendCount) {
+        this.resendCount = 0
+        return
+      }
       console.log('readyState: CONNECTING, reSend 1s later', data)
       setTimeout(() => {
+        this.resendCount++
         this.send(data, cb)
       }, 1000)
     }
     // CLOSING、CLOSED
     else {
+      if(this.resendCount >= this.maxResendCount) {
+        this.resendCount = 0
+        return
+      }
+      this.resendCount++
       this.init()
       console.log('readyState: CLOSING、CLOSED, reSend 1s later', data)
       setTimeout(() => {

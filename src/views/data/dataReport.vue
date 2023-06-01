@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onUnmounted} from "vue";
+import {ref, onUnmounted, reactive} from "vue";
 import {ElMessage} from "element-plus";
 import {getDeviceList} from "@/api/device/device";
 import {useUserStore} from "@/stores/user";
@@ -10,17 +10,19 @@ import ChartDay from "@/views/data/components/ChartDay.vue";
 import {getDataReport} from "@/api/data/data";
 const userStore = useUserStore()
 
-let deviceList = ref([])
 
+let deviceList = ref([])
+const totalDevice = ref(0)
+let schForm = reactive({
+  userName: userStore.getUserInfo.userName,
+  page: 1,
+  size: 10,
+})
 const getDeviceListHandle = () => {
-  let data = {
-    userName: userStore.getUserInfo.userName,
-    size: 999,
-    page: 1,
-  }
-  getDeviceList(data)
+  getDeviceList(schForm)
     .then(res => {
       deviceList.value = res.results
+      totalDevice.value = res.count
     })
 }
 getDeviceListHandle()
@@ -96,11 +98,13 @@ const getDataReportHandle = () => {
       <ul>
         <li v-for="item in deviceList" :key="item.deviceId" @click="changeDevice(item)" :class="{active: item.id === deviceItem.id}">
           <span>{{item.title}}</span>
-          <el-button v-if="item.status === '1'" type="info" link>未激活</el-button>
-          <el-button v-else-if="item.status === '2'" type="warning" link>离线</el-button>
-          <el-button v-else-if="item.status === '3'" type="success" link>在线</el-button>
+          <el-button v-if="item.status === 'UNACTIVE'" type="info" link>未激活</el-button>
+          <el-button v-else-if="item.topicStatus === 'UNSUBSCRIBED'" type="warning" link>未订阅</el-button>
+          <el-button v-else-if="item.topicStatus === 'SUBSCRIBED'" type="success" link>已订阅</el-button>
         </li>
       </ul>
+      <!-- 分页 -->
+      <el-pagination small layout="prev, pager, next" v-model:currentPage="schForm.page" :total="totalDevice"  @current-change="getDeviceListHandle"/>
     </div>
     <div class="log">
       <template v-if="deviceItem.id">

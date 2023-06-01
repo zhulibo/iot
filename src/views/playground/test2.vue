@@ -1,57 +1,76 @@
 <script setup>
-import {onUnmounted, ref} from "vue";
-import Socket from "@/utils/socket";
+import {reactive, ref} from "vue";
+import {getDeviceList, switchSub} from "@/api/device/device";
+import {useUserStore} from "@/stores/user";
 
-let msgList = ref([])
-const receiveMsg = (res) => {
-  if(res.data) {
-    msgList.value.push(res.data)
+const userStore = useUserStore()
+
+const schForm = reactive({
+  userName: userStore.getUserInfo.userName,
+  title: '',
+  deviceType: '',
+  status: '',
+  topicStatus: '',
+  onOffLineStatus: '',
+  page: 1,
+  size: 2000,
+})
+
+let deviceList = reactive([])
+// 获取设备列表
+const getDeviceListHandle = () => {
+  getDeviceList(schForm)
+    .then(res => {
+      deviceList.value = res.results
+    })
+}
+getDeviceListHandle()
+
+// 激活
+const createTopicHandle = (row) => {
+  return new Promise((resolve, reject) => {
+    let data = {
+      deviceid: row.id,
+      status: 'SUBSCRIBE'
+    }
+    switchSub(data)
+      .then(res => {
+        resolve(res)
+      })
+      .catch(err => {
+        reject(err)
+      })
+  })
+}
+
+const flag = ref(true)
+const start = () => {
+  async function test () {
+    for (let i = 0; i < deviceList.value.length; i++) {
+      if (!flag.value) {
+        break
+      }
+      const  res = await createTopicHandle(deviceList.value[i])
+      if(res.code !== 0) {
+        console.log(res)
+        break
+      }
+    }
   }
+  test()
 }
-
-let ws = new Socket({
-  url: `/apiws/room/123`,
-  onopen: () => {
-    console.log('连接已打开')
-  },
-  onmessage: (res) => {
-    console.log('收到消息了', res)
-    receiveMsg(res)
-  },
-  onerror: () => {
-    console.log('出现错误了')
-  },
-  onclose: () => {
-    console.log('关闭了')
-  },
-})
-
-let msg = ref()
-const sendMsg = () => {
-  ws.send(msg.value)
-  msg.value = ''
+const stop = () => {
+  flag.value = false
 }
-
-const doOnerror = () => {
-  let onerror = new Event('mousedown')
-  document.dispatchEvent(onerror)
-}
-
-onUnmounted(() => {
-  ws.destroy()
-  ws = null
-})
 </script>
 
 <template>
-  <el-input v-model="msg"></el-input>
-  <el-button @click="sendMsg">发送信息</el-button>
-  <ul>
-    <li v-for="item in msgList">{{item}}</li>
-  </ul>
-  <el-button @click="doOnerror">主动调起连接错误</el-button>
+  <div style="padding: 20px;">
+    <h1>订阅</h1>
+    <el-button @click="start">开始</el-button>
+    <el-button @click="stop">停止</el-button>
+  </div>
 </template>
 
 <style lang="pcss" scoped>
 </style>
-

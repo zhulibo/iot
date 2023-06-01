@@ -16,7 +16,6 @@ export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: constantRoutes
 })
-
 export const whiteList = ['/login', '/register', '/resetPassword'] // 无需登录的页面
 
 router.beforeEach((to, from, next) => {

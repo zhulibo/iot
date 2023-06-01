@@ -13,6 +13,7 @@ const logout = () => {
 
 <template>
   <div class="head-bar">
+    <div class="l"><h1>环境监测平台</h1></div>
     <div class="user-info">
       <div class="user-name">{{ userInfo.userName }}</div>
       <div class="user-logout" @click="logout">退出</div>
@@ -29,6 +30,17 @@ const logout = () => {
   right: 0;
   height: 50px;
   background-color: #fff;
+}
+.l{
+  font-size: 16px;
+  float: left;
+  & h1{
+    margin: 0;
+    padding: 0 20px;
+    line-height: 50px;
+    font-weight: bold;
+    color: #666;
+  }
 }
 .user-info{
   float: right;

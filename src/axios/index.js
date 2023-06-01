@@ -1,7 +1,7 @@
 import axios from 'axios'
-// import { router } from '@/router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
+import {useRouter} from "vue-router";
 
 let userStore
 
@@ -39,15 +39,16 @@ axios.interceptors.response.use(
   },
   err => {
     if (err && err.response) {
+      const router = useRouter()
       switch (err.response.status) {
         case 401:
           userStore.resetUserInfo()
-          // router.push({path: '/login'})
+          router.push({path: '/login'})
           err.message = '请重新登录(401)'
           break;
         case 403:
           userStore.resetUserInfo()
-          // router.push({path: '/login'})
+          router.push({path: '/login'})
           err.message = '请重新登录(403)'
           break;
         case 500:

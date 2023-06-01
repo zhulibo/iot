@@ -1,16 +1,13 @@
 <script setup>
-
-// 引入element-plus图标
-
 import { ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useUserStore } from "@/stores/user";
+import Uploader from "@/components/uploader/Uploader.vue";
 import {
   createTopic,
   delDevice,
   switchSub,
 } from "@/api/device/device";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { useUserStore } from "@/stores/user";
-import Uploader from "@/components/uploader/Uploader.vue";
 import {
   loading,
   deviceList,
@@ -145,6 +142,9 @@ const switchSubHandle = (row) => {
         <el-form ref="schFormRef" :inline="true" :model="schForm">
           <el-form-item label="设备名称" prop="title">
             <el-input v-model="schForm.title" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
+          </el-form-item>
+          <el-form-item label="设备序列号" prop="registerCode">
+            <el-input v-model="schForm.registerCode" placeholder="请输入" style="width: 200px;" clearable @change="getListHandle" />
           </el-form-item>
 <!--          <el-form-item label="创建时间" prop="startTime">-->
 <!--            <el-date-picker v-model="schForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="起"-->

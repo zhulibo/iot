@@ -30,7 +30,7 @@ onUnmounted(() => {
 
 const chartMapOption = reactive({
   title: {
-    text: '环境监测平台',
+    text: '',
     left: 'center'
   },
   tooltip: {
@@ -53,8 +53,8 @@ const chartMapOption = reactive({
     }
   },
   bmap: {
-    center: [110, 34],
-    zoom: 6.8,
+    center: [116.5, 39.5],
+    zoom: 9.5,
     roam: true,
     mapStyle: {
       styleJson:
@@ -128,6 +128,7 @@ const initChartLine = () => {
   chartMap.setOption(chartMapOption)
 }
 
+let loading = ref(true)
 const deviceInfo = ref({})
 getHomeDeviceInfo({userName: userStore.getUserInfo.userName})
   .then(res => {
@@ -150,11 +151,14 @@ getHomeDeviceInfo({userName: userStore.getUserInfo.userName})
     chartMapOption.series[0].data = data
     initChartLine()
   })
+  .finally(() => {
+    loading.value = false
+  })
 </script>
 
 <template>
   <div class="wrapper">
-    <div id="chart-map"></div>
+    <div id="chart-map" v-loading="loading"></div>
   </div>
 </template>
 <style lang="pcss" scoped>

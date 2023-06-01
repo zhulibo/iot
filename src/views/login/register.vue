@@ -5,6 +5,8 @@ import { register } from '@/api/user/user'
 import {validPhone, validPwd, validUserName} from "@/utils/validate";
 import {setDataAes} from "@/utils/aes2";
 import {ElMessage} from "element-plus";
+// import {useUserStore} from "@/stores/user";
+// import {getDeviceList} from "@/api/device/device";
 
 const router = useRouter()
 
@@ -55,6 +57,34 @@ const submitLoginForm = () => {
 const goToLogin = () => {
   router.push({ path: '/login' })
 }
+
+// const userStore = useUserStore()
+// const schForm = reactive({
+//   userName: userStore.getUserInfo.userName,
+//   title: '',
+//   registerCode: '',
+//   deviceType: '',
+//   // startTime: '',
+//   // endTime: '',
+//   status: '',
+//   topicStatus: '',
+//   onOffLineStatus: '',
+//   page: 1,
+//   size: 10,
+// })
+// const list = ref([])
+// // 获取设备列表
+// const getDeviceListHandle = () => {
+//   getDeviceList(schForm)
+//     .then(res => {
+//       // console.log(res)
+//       list.value = res
+//     })
+// }
+// getDeviceListHandle()
+
+// let a
+
 </script>
 
 <template>

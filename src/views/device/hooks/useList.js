@@ -12,6 +12,7 @@ export const tableRef = ref()
 export const schForm = reactive({
   userName: userStore.getUserInfo.userName,
   title: '',
+  registerCode: '',
   deviceType: '',
   // startTime: '',
   // endTime: '',
